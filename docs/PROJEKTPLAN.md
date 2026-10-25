@@ -152,7 +152,7 @@ Absicherung: `.env*` in `.gitignore` und `.dockerignore`, im Repo nur `.env.exam
 
 1. GitHub: Repo privat lassen, Secret Scanning und Push Protection aktivieren, Variable `AUTO_DEPLOY=true` setzen
 2. Coolify-Server: `docker login ghcr.io -u roberteinsle` mit dem PAT `read:packages` (falls noch nicht geschehen)
-3. Coolify: Postgres-17-Ressource anlegen (DB `filmlog`, eigener User), „Connect to Predefined Network“ aktivieren, Backup täglich einschalten
+3. Coolify: Postgres-17-Ressource anlegen (DB `filmlog`, eigener User), Backup täglich einschalten. `DB_HOST` = interner Hostname der Postgres-Ressource; das Compose hängt die Dienste dafür ins externe Netz `coolify`
 4. Coolify: Docker Compose Empty anlegen, `deploy/docker-compose.coolify.yml` einfügen, Env-Variablen setzen, Domain `https://filmlog.einsle.cloud` → Port 8080 am Dienst `app`
 5. DNS: `filmlog.einsle.cloud` auf den Coolify-Server (entfällt bei Wildcard)
 6. Secrets `COOLIFY_TOKEN` und `COOLIFY_WEBHOOK` im Repo hinterlegen

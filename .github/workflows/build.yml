@@ -53,6 +53,9 @@ jobs:
       - name: Composer-Abhängigkeiten
         run: composer install --no-interaction --prefer-dist --no-progress
 
+      - name: Sicherheitslücken in Abhängigkeiten (composer audit)
+        run: composer audit --no-interaction
+
       - name: Code-Stil (Pint)
         run: vendor/bin/pint --test
 

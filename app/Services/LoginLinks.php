@@ -17,6 +17,11 @@ class LoginLinks
     private const string CACHE_PREFIX = 'login-link:';
 
     /**
+     * Format der Tokens (Str::random(64)); wird auch als Routen-Constraint genutzt.
+     */
+    public const string TOKEN_PATTERN = '[A-Za-z0-9]{64}';
+
+    /**
      * Verschickt einen Login-Link, falls die Adresse die des Admins ist.
      * Für alle anderen Adressen passiert bewusst nichts (keine Auskunft,
      * welche Adressen existieren).
@@ -43,7 +48,7 @@ class LoginLinks
      */
     public function isValid(string $token): bool
     {
-        return Cache::has(self::CACHE_PREFIX.hash('sha256', $token));
+        return $this->hasValidFormat($token) && Cache::has(self::CACHE_PREFIX.hash('sha256', $token));
     }
 
     /**
@@ -51,6 +56,10 @@ class LoginLinks
      */
     public function consume(string $token): ?User
     {
+        if (! $this->hasValidFormat($token)) {
+            return null;
+        }
+
         $email = Cache::pull(self::CACHE_PREFIX.hash('sha256', $token));
 
         if (! is_string($email) || ! $this->isAdminEmail($email)) {
@@ -61,6 +70,11 @@ class LoginLinks
             ['email' => $email],
             ['name' => 'Admin', 'email_verified_at' => now()],
         );
+    }
+
+    private function hasValidFormat(string $token): bool
+    {
+        return preg_match('/^'.self::TOKEN_PATTERN.'$/', $token) === 1;
     }
 
     private function isAdminEmail(string $email): bool

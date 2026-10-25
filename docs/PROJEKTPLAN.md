@@ -166,6 +166,7 @@ Diese Punkte übernehme ich bewusst korrigiert:
 - Die Vorlage nennt die Repo-Variable einmal `AUTO_DEPLOY` und einmal `AUTODEPLOY`. Ich verwende durchgängig `AUTO_DEPLOY`.
 - Das Coolify-Compose der Vorlage enthält einen `db`-Dienst und keinen Scheduler. Für Filmlog entfällt `db` (die Datenbank ist extern), und `scheduler` kommt dazu. `depends_on: db` entfällt entsprechend.
 - In `build.yml` läuft vor dem Image-Build ein Test-Job (Pint + Pest gegen einen Postgres-Service). Ein roter Test erzeugt kein neues `latest`; Pull Requests werden nur getestet, nicht gebaut.
+- Die Vorlage ruft den Coolify-Deploy per `GET` auf. Coolify v4.5 verlangt `POST` (GET liefert 405); `build.yml` nutzt deshalb POST.
 - Die Vorlage sieht Filament vor. Filmlog verzichtet bewusst darauf (Endnutzer-App, Livewire-Screens).
 
 ## 8. Risiken und offene Punkte

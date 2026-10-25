@@ -1,0 +1,60 @@
+{
+  "id": 603,
+  "imdb_id": "tt0133093",
+  "title": "Matrix",
+  "original_title": "The Matrix",
+  "tagline": "Willkommen in der realen Welt.",
+  "overview": "Der Hacker Neo wird übers Internet von einer geheimnisvollen Untergrund-Organisation kontaktiert.",
+  "release_date": "1999-03-31",
+  "runtime": 136,
+  "poster_path": "/aOIuZAjPaRIE6CMzbazvcHuHXDc.jpg",
+  "backdrop_path": "/ncEsesgOJDNrTUED89hYbA117wo.jpg",
+  "vote_average": 8.218,
+  "vote_count": 27154,
+  "genres": [
+    {"id": 28, "name": "Action"},
+    {"id": 878, "name": "Science Fiction"}
+  ],
+  "belongs_to_collection": {"id": 2344, "name": "Matrix Filmreihe", "poster_path": "/bV9qTVHTVf0gkW0j7p7M0ILD4pG.jpg"},
+  "release_dates": {
+    "results": [
+      {"iso_3166_1": "US", "release_dates": [{"certification": "R", "type": 3, "release_date": "1999-03-31T00:00:00.000Z", "note": "", "iso_639_1": "", "descriptors": []}]},
+      {"iso_3166_1": "DE", "release_dates": [
+        {"certification": "", "type": 1, "release_date": "1999-06-17T00:00:00.000Z", "note": "Premiere", "iso_639_1": "", "descriptors": []},
+        {"certification": "16", "type": 5, "release_date": "1999-11-29T00:00:00.000Z", "note": "DVD", "iso_639_1": "", "descriptors": []},
+        {"certification": "16", "type": 3, "release_date": "1999-06-17T00:00:00.000Z", "note": "", "iso_639_1": "", "descriptors": []}
+      ]}
+    ]
+  },
+  "credits": {
+    "cast": [
+      {"id": 2975, "name": "Laurence Fishburne", "character": "Morpheus", "order": 1, "profile_path": "/iwx7h0AfuO9T8ilA6mXgKvL8e1q.jpg"},
+      {"id": 6384, "name": "Keanu Reeves", "character": "Neo", "order": 0, "profile_path": "/4D0PpNI0kmP58hgrwGC3wCjxhnm.jpg"},
+      {"id": 530, "name": "Carrie-Anne Moss", "character": "Trinity", "order": 2, "profile_path": null}
+    ],
+    "crew": [
+      {"id": 9339, "name": "Lilly Wachowski", "job": "Director", "department": "Directing"},
+      {"id": 9340, "name": "Lana Wachowski", "job": "Director", "department": "Directing"},
+      {"id": 9340, "name": "Lana Wachowski", "job": "Screenplay", "department": "Writing"},
+      {"id": 9341, "name": "Joel Silver", "job": "Producer", "department": "Production"}
+    ]
+  },
+  "watch/providers": {
+    "results": {
+      "DE": {
+        "link": "https://www.themoviedb.org/movie/603-the-matrix/watch?locale=DE",
+        "flatrate": [
+          {"provider_id": 8, "provider_name": "Netflix", "logo_path": "/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg", "display_priority": 1},
+          {"provider_id": 30, "provider_name": "WOW", "logo_path": "/1WESsDNHc2Vp7JXoiPBr2c1Rdyl.jpg", "display_priority": 5}
+        ],
+        "rent": [
+          {"provider_id": 2, "provider_name": "Apple TV", "logo_path": "/9ghgSC0MA082EL6HLCW3GalykFD.jpg", "display_priority": 2}
+        ]
+      },
+      "AT": {
+        "link": "https://www.themoviedb.org/movie/603-the-matrix/watch?locale=AT",
+        "flatrate": [{"provider_id": 337, "provider_name": "Disney Plus", "logo_path": "/x.jpg", "display_priority": 1}]
+      }
+    }
+  }
+}

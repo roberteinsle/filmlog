@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LogoutController;
 use App\Livewire\Auth\Login;
 use App\Livewire\Diary;
 use App\Livewire\Lists;
+use App\Livewire\MovieShow;
 use App\Livewire\Review;
 use App\Livewire\Search;
 use App\Livewire\Tonight;
@@ -25,6 +26,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth', 'login.fresh'])->group(function () {
     Route::livewire('/', Tonight::class)->name('tonight');
     Route::livewire('/suche', Search::class)->name('search');
+    Route::livewire('/film/{tmdbId}', MovieShow::class)->whereNumber('tmdbId')->name('movie');
     Route::livewire('/listen', Lists::class)->name('lists');
     Route::livewire('/tagebuch', Diary::class)->name('diary');
     Route::livewire('/rueckblick', Review::class)->name('review');

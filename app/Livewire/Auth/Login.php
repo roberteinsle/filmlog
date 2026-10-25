@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Auth;
 
+use App\Services\LoginLinks;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -17,51 +17,36 @@ use Livewire\Component;
 class Login extends Component
 {
     /**
-     * Fehlversuche pro Minute, bevor der Login gesperrt wird.
+     * Angeforderte Links pro Adresse und IP innerhalb von zehn Minuten.
      */
-    private const int MAX_ATTEMPTS = 5;
+    private const int MAX_REQUESTS = 3;
 
     #[Validate('required|string|email')]
     public string $email = '';
 
-    #[Validate('required|string')]
-    public string $password = '';
+    public bool $linkSent = false;
 
-    public bool $remember = true;
-
-    public function login(): void
+    public function sendLink(LoginLinks $loginLinks): void
     {
         $this->validate();
 
-        $throttleKey = $this->throttleKey();
+        $throttleKey = 'login-link|'.Str::lower($this->email).'|'.request()->ip();
 
-        if (RateLimiter::tooManyAttempts($throttleKey, self::MAX_ATTEMPTS)) {
+        if (RateLimiter::tooManyAttempts($throttleKey, self::MAX_REQUESTS)) {
             throw ValidationException::withMessages([
-                'email' => 'Zu viele Versuche. Bitte in '.RateLimiter::availableIn($throttleKey).' Sekunden erneut versuchen.',
+                'email' => 'Zu viele Anfragen. Bitte in '.ceil(RateLimiter::availableIn($throttleKey) / 60).' Minuten erneut versuchen.',
             ]);
         }
 
-        if (! Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
-            RateLimiter::hit($throttleKey);
+        RateLimiter::hit($throttleKey, 600);
 
-            throw ValidationException::withMessages([
-                'email' => 'E-Mail oder Passwort ist falsch.',
-            ]);
-        }
+        $loginLinks->send($this->email);
 
-        RateLimiter::clear($throttleKey);
-        session()->regenerate();
-
-        $this->redirectIntended(route('tonight'), navigate: true);
+        $this->linkSent = true;
     }
 
     public function render(): View
     {
         return view('livewire.auth.login');
-    }
-
-    private function throttleKey(): string
-    {
-        return Str::lower($this->email).'|'.request()->ip();
     }
 }

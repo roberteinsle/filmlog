@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginLinkController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Livewire\Auth\Login;
 use App\Livewire\Diary;
@@ -11,9 +12,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
     Route::livewire('/anmelden', Login::class)->name('login');
+    Route::get('/anmelden/link/{token}', [LoginLinkController::class, 'show'])->name('login.link');
+    Route::post('/anmelden/link/{token}', [LoginLinkController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('login.link.confirm');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'login.fresh'])->group(function () {
     Route::livewire('/', Tonight::class)->name('tonight');
     Route::livewire('/suche', Search::class)->name('search');
     Route::livewire('/listen', Lists::class)->name('lists');

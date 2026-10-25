@@ -6,8 +6,8 @@ Stand: 25.10.2026 · Repo: `roberteinsle/Filmlog` (privat) · Ziel-URL: https://
 
 | Thema | Entscheidung |
 |---|---|
-| Nutzer | Single-User. Ein Konto, wird per `php artisan filmlog:user` angelegt; keine Registrierung, kein Passwort-Reset per Mail |
-| Login | Laravel-Standard-Login (Session, E-Mail + Passwort), alle Routen hinter `auth` außer `/up` und Webhooks |
+| Nutzer | Single-User, zugleich Admin: `robert@einsle.com` (`FILMLOG_ADMIN_EMAIL`). Das Konto wird beim ersten Login automatisch angelegt |
+| Login | Magic Link per Mail (AWS SES über SMTP): Link 15 Min. gültig und nur einmal verwendbar, Login danach 7 Tage (absolut). Kein Passwort. Alle Routen hinter `auth` außer `/up` und Webhooks |
 | Stack | PHP 8.5 · Laravel 13 · Livewire 4 + Blade + Tailwind 4 (Vite) · Drag & Drop mit Livewire-eigenem `wire:sort` · Pest für Tests (gegen Postgres) |
 | Datenbank | PostgreSQL 17 als eigene Coolify-Ressource im selben Netz, nicht im Compose-Stack |
 | Queue / Cache / Session | Treiber `database`, kein Redis |
@@ -86,7 +86,7 @@ Jede Phase endet mit grünen Tests, einem PR und nach dem Merge einem automatisc
 - `composer create-project laravel/laravel` (Laravel 13), `"php": "^8.5"`, Pest, Livewire, Tailwind
 - Infrastruktur-Dateien nach Standard: `Dockerfile` (serversideup `8.5-fpm-nginx-alpine`, `pdo_pgsql intl bcmath`), `.dockerignore`, `.github/workflows/build.yml`, `.devcontainer/devcontainer.json` (PHP 8.5, Node 22, Docker-in-Docker), `docker-compose.yml` (lokal: app + worker + scheduler + Postgres 17), `deploy/docker-compose.coolify.yml` (app, worker, scheduler; **kein** db-Dienst, `DB_HOST` aus Env)
 - Login, Layout mit Navigation über die 5 Screens (mobile-first), leere Platzhalter-Seiten
-- `php artisan filmlog:user {email}` (Passwort wird interaktiv abgefragt)
+- Login per Magic Link (siehe Entscheidungen), Commit-Hash und -Datum neben dem App-Namen
 - Laravel Boost (Guidelines + Skills für Agents, ohne MCP)
 - `config/filmlog.php` (Stimmungen, Region, TMDB-Mindeststimmen = 500)
 - **Deine Schritte danach:** siehe Abschnitt 6. Ergebnis: `/up` liefert 200 auf filmlog.einsle.cloud
@@ -141,6 +141,7 @@ Jede Phase endet mit grünen Tests, einem PR und nach dem Merge einem automatisc
 | `APP_KEY` | Coolify-Env (lokal: `.env`, gitignored) |
 | `DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | Coolify-Env |
 | `TMDB_TOKEN` | Coolify-Env, lokal `.env` |
+| `MAIL_USERNAME`, `MAIL_PASSWORD` (SES-SMTP-Credentials), `MAIL_FROM_ADDRESS`, ggf. `MAIL_HOST` | Coolify-Env |
 | `PLEX_WEBHOOK_SECRET`, `PLEX_URL`, `PLEX_TOKEN` | Coolify-Env (ab Phase 8) |
 | `RADARR_URL`, `RADARR_API_KEY` | Coolify-Env (ab Phase 8) |
 | `COOLIFY_TOKEN`, `COOLIFY_WEBHOOK` | GitHub Repository-Secrets |
@@ -156,7 +157,7 @@ Absicherung: `.env*` in `.gitignore` und `.dockerignore`, im Repo nur `.env.exam
 4. Coolify: Docker Compose Empty anlegen, `deploy/docker-compose.coolify.yml` einfügen, Env-Variablen setzen, Domain `https://filmlog.einsle.cloud` → Port 8080 am Dienst `app`
 5. DNS: `filmlog.einsle.cloud` auf den Coolify-Server (entfällt bei Wildcard)
 6. Secrets `COOLIFY_TOKEN` und `COOLIFY_WEBHOOK` im Repo hinterlegen
-7. Erstes Deploy, `php -v` im Container (≥ 8.5.12), `php artisan filmlog:user` ausführen
+7. Erstes Deploy, `php -v` im Container (≥ 8.5.12), danach per Magic Link mit `robert@einsle.com` anmelden
 
 ## 7. Hinweise zur Vorlage „Tech Stack“
 

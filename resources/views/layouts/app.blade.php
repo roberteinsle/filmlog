@@ -15,9 +15,12 @@
     <body class="min-h-full bg-stone-950 font-sans text-stone-100 antialiased">
         <header class="sticky top-0 z-20 border-b border-stone-800/80 bg-stone-950/90 pt-[env(safe-area-inset-top)] backdrop-blur">
             <div class="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4">
-                <a href="{{ route('tonight') }}" wire:navigate class="text-lg font-semibold tracking-tight">
-                    Film<span class="text-amber-400">log</span>
-                </a>
+                <div class="flex items-baseline gap-2">
+                    <a href="{{ route('tonight') }}" wire:navigate class="text-lg font-semibold tracking-tight">
+                        Film<span class="text-amber-400">log</span>
+                    </a>
+                    <x-build-info />
+                </div>
 
                 <nav class="hidden items-center gap-1 md:flex" aria-label="Hauptnavigation">
                     @foreach ($navigation as $item)

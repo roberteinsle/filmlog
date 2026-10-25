@@ -27,6 +27,9 @@
         <env name="DB_DATABASE" value="filmlog_test"/>
         <env name="DB_URL" value=""/>
         <env name="TMDB_TOKEN" value="test-token"/>
+        <env name="FILMLOG_ADMIN_EMAIL" value="admin@example.com"/>
+        <env name="APP_COMMIT" value=""/>
+        <env name="APP_COMMIT_DATE" value=""/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

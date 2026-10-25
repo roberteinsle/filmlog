@@ -87,10 +87,17 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
 
+      - name: Commit-Datum ermitteln
+        id: commit
+        run: echo "date=$(git log -1 --format=%cI)" >> "$GITHUB_OUTPUT"
+
       - uses: docker/build-push-action@v6
         with:
           context: .
           target: production
+          build-args: |
+            APP_COMMIT=${{ github.sha }}
+            APP_COMMIT_DATE=${{ steps.commit.outputs.date }}
           push: true
           pull: true                      # Base-Image immer frisch (neuester PHP-Patch)
           no-cache: ${{ inputs.no_cache == true }}

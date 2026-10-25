@@ -12,7 +12,6 @@ cp .env.example .env            # TMDB_TOKEN eintragen – .env wird nie committ
 docker compose up -d            # app (:8080), worker, scheduler, db
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate
-docker compose exec -it app php artisan filmlog:user du@example.com
 npm run dev                     # Vite mit Hot Reload
 ```
 
@@ -27,8 +26,4 @@ docker compose exec app php artisan test --compact
 Push auf `main` → GitHub Action testet, baut und pusht nach GHCR → Coolify-Deploy per Webhook (`AUTO_DEPLOY=true`).
 Das Coolify-Compose liegt in [deploy/docker-compose.coolify.yml](deploy/docker-compose.coolify.yml); alle Secrets nur in Coolify bzw. GitHub Secrets.
 
-Konto in Produktion anlegen (Coolify → Terminal des Dienstes `app`):
-
-```sh
-php artisan filmlog:user du@example.com
-```
+Login per Magic Link an `FILMLOG_ADMIN_EMAIL` (lokal landet die Mail in `storage/logs/laravel.log`).

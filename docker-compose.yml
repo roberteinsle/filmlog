@@ -1,0 +1,59 @@
+# Lokale Entwicklung und Codespaces: Code per Bind-Mount, Postgres im Stack.
+# Produktion: deploy/docker-compose.coolify.yml (fertige Images, externe DB).
+x-app: &app
+  build:
+    context: .
+    target: development
+    args:
+      USER_ID: ${UID:-1000}
+      GROUP_ID: ${GID:-1000}
+  image: filmlog:dev
+  env_file: .env
+  volumes:
+    - .:/var/www/html
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  app:
+    <<: *app
+    ports:
+      - "8080:8080"
+    environment:
+      PHP_OPCACHE_ENABLE: "0"
+
+  worker:
+    <<: *app
+    command: ["php", "/var/www/html/artisan", "queue:work", "--tries=3", "--timeout=120"]
+    stop_signal: SIGTERM
+    healthcheck:
+      test: ["CMD", "healthcheck-queue"]
+      start_period: 10s
+
+  scheduler:
+    <<: *app
+    command: ["php", "/var/www/html/artisan", "schedule:work"]
+    stop_signal: SIGTERM
+    healthcheck:
+      test: ["CMD", "healthcheck-schedule"]
+      start_period: 10s
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: filmlog
+      POSTGRES_USER: filmlog
+      POSTGRES_PASSWORD: filmlog
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./docker/postgres/create-test-db.sql:/docker-entrypoint-initdb.d/create-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U filmlog -d filmlog"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  db-data:

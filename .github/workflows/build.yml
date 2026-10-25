@@ -1,0 +1,110 @@
+name: Build & Push
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  schedule:
+    - cron: '17 4 * * 1'   # wöchentlich: neueste PHP-Patches übernehmen
+  workflow_dispatch:
+    inputs:
+      no_cache:
+        description: 'Ohne Cache bauen (Sicherheits-Update)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: filmlog_test
+          POSTGRES_USER: filmlog
+          POSTGRES_PASSWORD: filmlog
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U filmlog"
+          --health-interval 5s
+          --health-retries 10
+    env:
+      DB_HOST: 127.0.0.1
+      DB_USERNAME: filmlog
+      DB_PASSWORD: filmlog
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: intl, pdo_pgsql, zip
+          coverage: none
+
+      - name: Composer-Abhängigkeiten
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Code-Stil (Pint)
+        run: vendor/bin/pint --test
+
+      - name: Tests
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan test --compact
+
+  build:
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-,format=short
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: production
+          push: true
+          pull: true                      # Base-Image immer frisch (neuester PHP-Patch)
+          no-cache: ${{ inputs.no_cache == true }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: PHP-Version im Image ausgeben
+        run: docker run --rm --entrypoint php ${{ fromJSON(steps.meta.outputs.json).tags[0] }} -v
+
+      # Optional: Coolify nach erfolgreichem Push anstoßen (Repo-Variable AUTO_DEPLOY=true).
+      - name: Trigger Coolify deploy
+        if: github.ref == 'refs/heads/main' && vars.AUTO_DEPLOY == 'true'
+        run: |
+          curl -fsS -X GET "${{ secrets.COOLIFY_WEBHOOK }}" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"

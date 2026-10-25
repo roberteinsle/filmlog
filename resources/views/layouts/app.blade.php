@@ -1,0 +1,66 @@
+@php
+    $navigation = [
+        ['route' => 'tonight', 'label' => 'Heute Abend', 'icon' => 'M3 12h18M3 6h18M3 18h12'],
+        ['route' => 'search', 'label' => 'Suche', 'icon' => 'M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z'],
+        ['route' => 'lists', 'label' => 'Listen', 'icon' => 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01'],
+        ['route' => 'diary', 'label' => 'Tagebuch', 'icon' => 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z'],
+        ['route' => 'review', 'label' => 'Rückblick', 'icon' => 'M3 3v18h18M7 15l4-4 3 3 5-6'],
+    ];
+@endphp
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
+    <head>
+        <x-head :title="$title ?? null" />
+    </head>
+    <body class="min-h-full bg-stone-950 font-sans text-stone-100 antialiased">
+        <header class="sticky top-0 z-20 border-b border-stone-800/80 bg-stone-950/90 pt-[env(safe-area-inset-top)] backdrop-blur">
+            <div class="mx-auto flex h-14 max-w-5xl items-center justify-between gap-4 px-4">
+                <a href="{{ route('tonight') }}" wire:navigate class="text-lg font-semibold tracking-tight">
+                    Film<span class="text-amber-400">log</span>
+                </a>
+
+                <nav class="hidden items-center gap-1 md:flex" aria-label="Hauptnavigation">
+                    @foreach ($navigation as $item)
+                        <a href="{{ route($item['route']) }}" wire:navigate
+                           @class([
+                               'rounded-md px-3 py-1.5 text-sm transition',
+                               'bg-stone-800 text-amber-300' => request()->routeIs($item['route']),
+                               'text-stone-400 hover:text-stone-100' => ! request()->routeIs($item['route']),
+                           ])>
+                            {{ $item['label'] }}
+                        </a>
+                    @endforeach
+                </nav>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="text-sm text-stone-500 hover:text-stone-200">Abmelden</button>
+                </form>
+            </div>
+        </header>
+
+        <main class="mx-auto max-w-5xl px-4 pt-6 pb-28 md:pb-12">
+            {{ $slot }}
+        </main>
+
+        <nav class="fixed inset-x-0 bottom-0 z-20 border-t border-stone-800 bg-stone-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden" aria-label="Hauptnavigation">
+            <div class="grid grid-cols-5">
+                @foreach ($navigation as $item)
+                    <a href="{{ route($item['route']) }}" wire:navigate
+                       @class([
+                           'flex flex-col items-center gap-1 py-2.5 text-[11px]',
+                           'text-amber-300' => request()->routeIs($item['route']),
+                           'text-stone-500' => ! request()->routeIs($item['route']),
+                       ])>
+                        <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="{{ $item['icon'] }}" />
+                        </svg>
+                        {{ $item['label'] }}
+                    </a>
+                @endforeach
+            </div>
+        </nav>
+
+        @livewireScripts
+    </body>
+</html>

@@ -43,3 +43,10 @@ ENV AUTORUN_ENABLED=true \
     PHP_OPCACHE_ENABLE=1
 COPY --chown=www-data:www-data --from=vendor /var/www/html /var/www/html
 COPY --chown=www-data:www-data --from=assets /app/public/build /var/www/html/public/build
+
+# Build-Info für die Anzeige neben dem App-Namen (gesetzt von der GitHub Action).
+# Steht bewusst am Ende, damit ein neuer Commit keine früheren Layer invalidiert.
+ARG APP_COMMIT=""
+ARG APP_COMMIT_DATE=""
+ENV APP_COMMIT=${APP_COMMIT} \
+    APP_COMMIT_DATE=${APP_COMMIT_DATE}

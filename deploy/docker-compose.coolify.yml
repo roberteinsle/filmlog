@@ -27,6 +27,15 @@ x-env: &env
   CACHE_STORE: database
   QUEUE_CONNECTION: database
   TMDB_TOKEN: ${TMDB_TOKEN}
+  FILMLOG_ADMIN_EMAIL: ${FILMLOG_ADMIN_EMAIL:-robert@einsle.com}
+  # AWS SES per SMTP (Port 587, STARTTLS). Zugangsdaten = SES-SMTP-Credentials, nicht der AWS-Access-Key.
+  MAIL_MAILER: smtp
+  MAIL_HOST: ${MAIL_HOST:-email-smtp.eu-central-1.amazonaws.com}
+  MAIL_PORT: ${MAIL_PORT:-587}
+  MAIL_USERNAME: ${MAIL_USERNAME}
+  MAIL_PASSWORD: ${MAIL_PASSWORD}
+  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
+  MAIL_FROM_NAME: Filmlog
 
 services:
   app:

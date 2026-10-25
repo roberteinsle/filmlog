@@ -4,6 +4,36 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Login per Magic Link
+    |--------------------------------------------------------------------------
+    |
+    | Filmlog hat genau ein Konto. Nur an diese Adresse wird ein Login-Link
+    | verschickt; das Konto wird beim ersten Login automatisch angelegt.
+    |
+    */
+
+    'admin_email' => env('FILMLOG_ADMIN_EMAIL', 'robert@einsle.com'),
+
+    'login_link_minutes' => 15,
+
+    'login_lifetime_days' => 7,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Build-Info
+    |--------------------------------------------------------------------------
+    |
+    | Wird beim Image-Build von der GitHub Action gesetzt (APP_COMMIT,
+    | APP_COMMIT_DATE als ISO-8601) und neben dem App-Namen angezeigt.
+    |
+    */
+
+    'commit' => env('APP_COMMIT'),
+
+    'commit_date' => env('APP_COMMIT_DATE'),
+
+    /*
+    |--------------------------------------------------------------------------
     | TMDB-Sprache und Region
     |--------------------------------------------------------------------------
     |

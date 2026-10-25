@@ -1,0 +1,81 @@
+# deploy/docker-compose.coolify.yml
+# Wird von Hand in Coolify (Docker Compose Empty) eingefügt; Coolify liest es nicht aus dem Repo.
+# PostgreSQL läuft als eigene Coolify-Ressource im selben Netz ("Connect to Predefined Network").
+# Alle ${...}-Werte werden in Coolify unter Environment Variables gesetzt – nie hier eintragen.
+
+x-env: &env
+  APP_NAME: Filmlog
+  APP_ENV: production
+  APP_DEBUG: "false"
+  APP_KEY: ${APP_KEY}
+  APP_URL: ${APP_URL:-https://filmlog.einsle.cloud}
+  APP_LOCALE: de
+  APP_FALLBACK_LOCALE: en
+  APP_TIMEZONE: Europe/Berlin
+  LOG_CHANNEL: stderr
+  LOG_LEVEL: ${LOG_LEVEL:-warning}
+  DB_CONNECTION: pgsql
+  DB_HOST: ${DB_HOST}
+  DB_PORT: ${DB_PORT:-5432}
+  DB_DATABASE: ${DB_DATABASE:-filmlog}
+  DB_USERNAME: ${DB_USERNAME}
+  DB_PASSWORD: ${DB_PASSWORD}
+  SESSION_DRIVER: database
+  SESSION_LIFETIME: "10080"
+  SESSION_SECURE_COOKIE: "true"
+  CACHE_STORE: database
+  QUEUE_CONNECTION: database
+  TMDB_TOKEN: ${TMDB_TOKEN}
+
+services:
+  app:
+    image: ghcr.io/roberteinsle/filmlog:${APP_TAG:-latest}
+    pull_policy: always
+    environment:
+      <<: *env
+      AUTORUN_ENABLED: "true"
+    volumes:
+      - app-storage:/var/www/html/storage
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  worker:
+    image: ghcr.io/roberteinsle/filmlog:${APP_TAG:-latest}
+    pull_policy: always
+    command: ["php", "/var/www/html/artisan", "queue:work", "--tries=3", "--timeout=120"]
+    stop_signal: SIGTERM
+    environment:
+      <<: *env
+      AUTORUN_ENABLED: "false"
+    volumes:
+      - app-storage:/var/www/html/storage
+    healthcheck:
+      test: ["CMD", "healthcheck-queue"]
+      start_period: 10s
+    depends_on:
+      app:
+        condition: service_healthy
+
+  scheduler:
+    image: ghcr.io/roberteinsle/filmlog:${APP_TAG:-latest}
+    pull_policy: always
+    command: ["php", "/var/www/html/artisan", "schedule:work"]
+    stop_signal: SIGTERM
+    environment:
+      <<: *env
+      AUTORUN_ENABLED: "false"
+    volumes:
+      - app-storage:/var/www/html/storage
+    healthcheck:
+      test: ["CMD", "healthcheck-schedule"]
+      start_period: 10s
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  app-storage:

@@ -1,0 +1,25 @@
+{
+    "name": "Filmlog",
+    // PHP-Version wie im Dockerfile (ARG PHP_VERSION) und in composer.json
+    "image": "mcr.microsoft.com/devcontainers/php:8.5-trixie",
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": { "version": "22" },
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    },
+    "onCreateCommand": "sudo apt-get update && sudo apt-get install -y --no-install-recommends libpq-dev libicu-dev libzip-dev && sudo docker-php-ext-install pdo_pgsql intl zip",
+    "postCreateCommand": "composer install && npm ci && ([ -f .env ] || (cp .env.example .env && php artisan key:generate))",
+    "forwardPorts": [8080, 5173],
+    "portsAttributes": {
+        "8080": { "label": "Filmlog" },
+        "5173": { "label": "Vite" }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "bmewburn.vscode-intelephense-client",
+                "bradlc.vscode-tailwindcss",
+                "onecentlab.laravel-blade-snippets"
+            ]
+        }
+    }
+}

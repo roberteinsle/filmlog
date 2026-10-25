@@ -103,8 +103,13 @@ jobs:
         run: docker run --rm --entrypoint php ${{ fromJSON(steps.meta.outputs.json).tags[0] }} -v
 
       # Optional: Coolify nach erfolgreichem Push anstoßen (Repo-Variable AUTO_DEPLOY=true).
+      # Coolify ab v4.5 akzeptiert /api/v1/deploy nur per POST (GET → 405).
       - name: Trigger Coolify deploy
         if: github.ref == 'refs/heads/main' && vars.AUTO_DEPLOY == 'true'
+        env:
+          COOLIFY_WEBHOOK: ${{ secrets.COOLIFY_WEBHOOK }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
         run: |
-          curl -fsS -X GET "${{ secrets.COOLIFY_WEBHOOK }}" \
-            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
+          curl -sS --fail-with-body -X POST "$COOLIFY_WEBHOOK" \
+            -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            -H "Accept: application/json"

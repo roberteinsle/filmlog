@@ -1,16 +1,5 @@
 <?php
 
-use App\Http\Middleware\EnsureLoginIsFresh;
-use App\Models\User;
-
-function actingAsLoggedInUser(): User
-{
-    $user = User::factory()->create();
-    test()->actingAs($user)->withSession([EnsureLoginIsFresh::SESSION_KEY => now()->getTimestamp()]);
-
-    return $user;
-}
-
 test('every screen renders for a logged-in user', function (string $routeName, string $heading) {
     actingAsLoggedInUser();
 

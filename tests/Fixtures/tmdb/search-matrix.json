@@ -1,0 +1,10 @@
+{
+  "page": 1,
+  "total_pages": 1,
+  "total_results": 3,
+  "results": [
+    {"id": 603, "title": "Matrix", "original_title": "The Matrix", "release_date": "1999-03-31", "poster_path": "/aOIuZAjPaRIE6CMzbazvcHuHXDc.jpg", "overview": "Der Hacker Neo wird übers Internet kontaktiert.", "genre_ids": [28, 878], "vote_average": 8.2, "vote_count": 27154},
+    {"id": 604, "title": "Matrix Reloaded", "original_title": "The Matrix Reloaded", "release_date": "2003-05-15", "poster_path": "/9TGHDvWrqKBzwDxDodHYXEmOE6J.jpg", "overview": "Neo und die Rebellen kämpfen weiter.", "genre_ids": [28, 878], "vote_average": 7.1, "vote_count": 11000},
+    {"id": 605, "title": "Matrix Revolutions", "original_title": "The Matrix Revolutions", "release_date": "", "poster_path": null, "overview": "", "genre_ids": [], "vote_average": 0, "vote_count": 0}
+  ]
+}

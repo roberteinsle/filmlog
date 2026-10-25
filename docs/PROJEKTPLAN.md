@@ -92,6 +92,7 @@ Jede Phase endet mit grünen Tests, einem PR und nach dem Merge einem automatisc
 - **Deine Schritte danach:** siehe Abschnitt 6. Ergebnis: `/up` liefert 200 auf filmlog.einsle.cloud
 
 ### Phase 1 – TMDB, Suche, Filmseite, Status-Banner (MVP)
+- Schema aus Abschnitt 2 für `movies`, `viewings`, `lists` (Watchlist wird per Migration angelegt) und `list_items`; `companions` folgt in Phase 2
 - `TmdbClient` + `SyncMovie` (Details mit `append_to_response=release_dates,credits,watch/providers`), FSK-Extraktion DE
 - Suche (Livewire, debounced, `de-DE`) mit Status-Punkt pro Treffer
 - Filmseite: Banner 🟢/🟡/🔴, Poster, Inhalt, Laufzeit, FSK, Cast, Regie, Streaming-Anbieter DE; „Auf Plex vorhanden“ folgt in Phase 7

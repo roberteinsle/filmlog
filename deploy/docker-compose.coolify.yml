@@ -1,6 +1,7 @@
 # deploy/docker-compose.coolify.yml
 # Wird von Hand in Coolify (Docker Compose Empty) eingefügt; Coolify liest es nicht aus dem Repo.
-# PostgreSQL läuft als eigene Coolify-Ressource im selben Netz ("Connect to Predefined Network").
+# PostgreSQL läuft als eigene Coolify-Ressource; app, worker und scheduler hängen deshalb
+# zusätzlich im externen Netz "coolify", in dem auch die Datenbank erreichbar ist.
 # Alle ${...}-Werte werden in Coolify unter Environment Variables gesetzt – nie hier eintragen.
 
 x-env: &env
@@ -36,6 +37,9 @@ services:
       AUTORUN_ENABLED: "true"
     volumes:
       - app-storage:/var/www/html/storage
+    networks:
+      - default
+      - coolify
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/up"]
       interval: 30s
@@ -53,6 +57,9 @@ services:
       AUTORUN_ENABLED: "false"
     volumes:
       - app-storage:/var/www/html/storage
+    networks:
+      - default
+      - coolify
     healthcheck:
       test: ["CMD", "healthcheck-queue"]
       start_period: 10s
@@ -70,6 +77,9 @@ services:
       AUTORUN_ENABLED: "false"
     volumes:
       - app-storage:/var/www/html/storage
+    networks:
+      - default
+      - coolify
     healthcheck:
       test: ["CMD", "healthcheck-schedule"]
       start_period: 10s
@@ -79,3 +89,7 @@ services:
 
 volumes:
   app-storage:
+
+networks:
+  coolify:
+    external: true

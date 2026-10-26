@@ -2,7 +2,7 @@
     $navigation = [
         ['route' => 'tonight', 'label' => 'Heute Abend', 'icon' => 'M3 12h18M3 6h18M3 18h12'],
         ['route' => 'search', 'active' => ['search', 'movie'], 'label' => 'Suche', 'icon' => 'M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z'],
-        ['route' => 'lists', 'label' => 'Listen', 'icon' => 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01'],
+        ['route' => 'lists', 'active' => ['lists', 'lists.show'], 'label' => 'Listen', 'icon' => 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01'],
         ['route' => 'diary', 'label' => 'Tagebuch', 'icon' => 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z'],
         ['route' => 'review', 'label' => 'Rückblick', 'icon' => 'M3 3v18h18M7 15l4-4 3 3 5-6'],
     ];

@@ -9,6 +9,7 @@ use App\Services\Tmdb\TmdbException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -60,6 +61,12 @@ class Search extends Component
             'status' => $statuses[(int) $hit['id']],
         ], $hits);
     }
+
+    /**
+     * „Zur Liste“ hat etwas geändert: neu rendern, damit die Status-Punkte stimmen.
+     */
+    #[On('list-membership-changed')]
+    public function refreshStatuses(): void {}
 
     public function render(): View
     {

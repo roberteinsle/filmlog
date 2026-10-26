@@ -22,8 +22,8 @@
     @else
         <ul class="divide-y divide-stone-800/70">
             @foreach ($results as $result)
-                <li wire:key="result-{{ $result['id'] }}">
-                    <a href="{{ route('movie', $result['id']) }}" wire:navigate class="flex gap-4 py-3 transition hover:bg-stone-900/60">
+                <li wire:key="result-{{ $result['id'] }}" class="flex items-center gap-2">
+                    <a href="{{ route('movie', $result['id']) }}" wire:navigate class="flex min-w-0 flex-1 gap-4 py-3 transition hover:bg-stone-900/60">
                         <x-poster :path="$result['poster_path']" :alt="$result['title']" size="w92" class="w-14 shrink-0" />
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center gap-2">
@@ -36,6 +36,7 @@
                             @endif
                         </div>
                     </a>
+                    <livewire:add-to-list :tmdb-id="$result['id']" variant="icon" :key="'add-to-list-'.$result['id']" />
                 </li>
             @endforeach
         </ul>

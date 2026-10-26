@@ -16,6 +16,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
@@ -77,6 +78,12 @@ class MovieShow extends Component
     {
         $this->askRemoveFromWatchlist = false;
     }
+
+    /**
+     * „Zur Liste“ hat etwas geändert: neu rendern, damit das Banner den Watchlist-Stand zeigt.
+     */
+    #[On('list-membership-changed')]
+    public function refreshStatus(): void {}
 
     public function render(TmdbClient $tmdb, SyncMovie $syncMovie, MovieStatusResolver $statuses): View
     {

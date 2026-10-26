@@ -230,7 +230,7 @@ class TraktExport
                 'history' => $this->readHistory($data),
                 'ratings' => $this->readRatings($data),
                 'watchlist' => $this->readWatchlist($data),
-                'list-names' => count($listNames = $this->readListNames($data)),
+                'list-names' => count(array_unique($listNames = $this->readListNames($data))),
                 'list' => count($listFiles[Str::after(Str::beforeLast($name, '.json'), 'lists-')] = $this->isOwnListFile($name) ? $this->listEntries($data) : []),
             };
 

@@ -63,4 +63,10 @@
             <button type="submit" class="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-stone-950 hover:bg-amber-300">Hinzufügen</button>
         </form>
     </section>
+
+    <section class="mt-10 max-w-2xl">
+        <h2 class="mb-1 text-lg font-semibold tracking-tight">Daten</h2>
+        <p class="mb-4 text-sm text-stone-400">Verlauf, Bewertungen, Watchlist und Listen aus einem Trakt-Export übernehmen.</p>
+        <a href="{{ route('import') }}" wire:navigate class="inline-flex items-center gap-2 rounded-lg border border-stone-700 px-4 py-2 text-sm font-medium text-stone-200 transition hover:border-stone-500">Trakt-Import öffnen</a>
+    </section>
 </div>

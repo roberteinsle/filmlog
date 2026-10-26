@@ -68,6 +68,20 @@ class TmdbClient
         );
     }
 
+    /**
+     * TMDB-ID zu einer IMDb-ID (tt…) über /find; null, wenn TMDB den Film nicht kennt.
+     */
+    public function findMovieIdByImdbId(string $imdbId): ?int
+    {
+        $tmdbId = Cache::remember(
+            "tmdb:find:imdb:{$imdbId}",
+            self::MOVIE_CACHE_SECONDS,
+            fn (): int => (int) ($this->get("find/{$imdbId}", ['external_source' => 'imdb_id'])->json('movie_results.0.id') ?? 0),
+        );
+
+        return $tmdbId > 0 ? $tmdbId : null;
+    }
+
     public function forgetMovie(int $tmdbId): void
     {
         Cache::forget("tmdb:movie:{$tmdbId}:{$this->language}");

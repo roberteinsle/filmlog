@@ -114,6 +114,7 @@ Jede Phase endet mit grünen Tests, einem PR und nach dem Merge einem automatisc
 - Liest `watched-history` → viewings (`source=trakt`, `external_id` = Trakt-History-ID), `ratings-movies` → Bewertung der jeweils letzten Sichtung, `watchlist` → Watchlist, `lists-*` → Listen
 - Filme ohne `tmdb_id` werden über `imdb_id` per TMDB `/find` aufgelöst; was sich nicht auflösen lässt, landet in einem Import-Bericht
 - **Von dir benötigt:** die Dateiliste deines ZIPs (nur die Namen und einen gekürzten, anonymisierten Eintrag, damit ich das Format treffe)
+- Umgesetzt gegen das Trakt-API-JSON-Format (`watched-history.json` bzw. `history*.json`, `ratings-movies.json`, `watchlist.json`, `lists-lists.json` + `lists-{slug}.json`, Ordner im ZIP egal). Nicht erkannte Dateien nennt der Import-Bericht; weicht dein Export ab, wird der Parser angepasst
 
 ### Phase 5 – Scheduler und MVP-Release
 - Nächtlich (03:30): `RefreshMovie` für Filme mit `cached_at` älter als 30 Tage sowie für Filme auf Listen (Anbieter ändern sich)

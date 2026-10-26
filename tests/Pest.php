@@ -3,7 +3,10 @@
 use App\Http\Middleware\EnsureLoginIsFresh;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /*
@@ -59,4 +62,37 @@ function fakeTmdb(): void
         'api.themoviedb.org/3/movie/603*' => Http::response(tmdbFixture('movie-603')),
         'api.themoviedb.org/3/movie/*' => Http::response(['status_code' => 34, 'status_message' => 'The resource you requested could not be found.'], 404),
     ]);
+}
+
+/**
+ * Baut einen Trakt-Export als ZIP auf der (gefakten) local-Disk und liefert den Pfad relativ zur Disk.
+ *
+ * @param  array<string, mixed>  $files  Dateiname im ZIP → Inhalt (Array wird zu JSON)
+ */
+function traktZip(array $files, string $path = 'imports/test.zip'): string
+{
+    $absolutePath = Storage::disk('local')->path($path);
+    File::ensureDirectoryExists(dirname($absolutePath));
+
+    $zip = new ZipArchive;
+    $zip->open($absolutePath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+
+    foreach ($files as $name => $content) {
+        $zip->addFromString($name, is_string($content) ? $content : json_encode($content, JSON_THROW_ON_ERROR));
+    }
+
+    $zip->close();
+
+    return $path;
+}
+
+/**
+ * Ein Film-Objekt im Format der Trakt-API.
+ *
+ * @param  array<string, mixed>  $ids
+ * @return array<string, mixed>
+ */
+function traktMovie(string $title, ?int $year, array $ids): array
+{
+    return ['title' => $title, 'year' => $year, 'ids' => $ids + ['slug' => Str::slug($title)]];
 }

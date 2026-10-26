@@ -11,6 +11,7 @@ use App\Livewire\Review;
 use App\Livewire\Search;
 use App\Livewire\Settings;
 use App\Livewire\Tonight;
+use App\Livewire\TraktImportPage;
 use App\Services\LoginLinks;
 use Illuminate\Support\Facades\Route;
 
@@ -34,6 +35,7 @@ Route::middleware(['auth', 'login.fresh'])->group(function () {
     Route::livewire('/tagebuch', Diary::class)->name('diary');
     Route::livewire('/rueckblick', Review::class)->name('review');
     Route::livewire('/einstellungen', Settings::class)->name('settings');
+    Route::livewire('/einstellungen/trakt-import', TraktImportPage::class)->name('import');
 
     Route::post('/abmelden', LogoutController::class)->name('logout');
 });

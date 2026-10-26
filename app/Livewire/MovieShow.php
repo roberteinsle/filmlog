@@ -3,13 +3,17 @@
 namespace App\Livewire;
 
 use App\Actions\SyncMovie;
+use App\Jobs\SyncPlexLibrary;
 use App\Livewire\Forms\ViewingForm;
 use App\Models\Companion;
 use App\Models\Movie;
+use App\Models\MovieCollection;
 use App\Models\MovieList;
 use App\Models\StreamingSubscription;
 use App\Models\Viewing;
 use App\Services\MovieStatusResolver;
+use App\Services\Plex\PlexClient;
+use App\Services\Plex\PlexException;
 use App\Services\Tmdb\MovieDetails;
 use App\Services\Tmdb\MovieNotFoundException;
 use App\Services\Tmdb\TmdbClient;
@@ -35,6 +39,8 @@ class MovieShow extends Component
     public bool $showViewingDialog = false;
 
     public bool $askRemoveFromWatchlist = false;
+
+    public ?string $plexMessage = null;
 
     public function mount(int $tmdbId): void
     {
@@ -122,6 +128,31 @@ class MovieShow extends Component
     }
 
     /**
+     * Gleicht die Plex-Bibliothek sofort ab (sonst nachts), z. B. nachdem ein Film auf Plex dazukam.
+     */
+    public function syncWithPlex(PlexClient $plex): void
+    {
+        if (! $plex->isConfigured()) {
+            $this->plexMessage = 'Plex ist nicht konfiguriert.';
+
+            return;
+        }
+
+        try {
+            app()->call([new SyncPlexLibrary, 'handle']);
+        } catch (PlexException $exception) {
+            report($exception);
+            $this->plexMessage = 'Plex ist gerade nicht erreichbar.';
+
+            return;
+        }
+
+        $this->plexMessage = Movie::query()->whereKey($this->tmdbId)->where('on_plex', true)->exists()
+            ? 'Abgeglichen: Der Film liegt auf Plex.'
+            : 'Abgeglichen: Der Film ist nicht auf Plex.';
+    }
+
+    /**
      * Nur Sichtungen dieses Films lassen sich hier bearbeiten oder löschen.
      */
     private function ownViewing(int $viewingId): Viewing
@@ -151,12 +182,26 @@ class MovieShow extends Component
             $movie = Movie::find($this->tmdbId);
         }
 
+        $collection = null;
+
+        if ($details?->collectionId !== null) {
+            try {
+                $collection = MovieCollection::storeFromTmdb($details->collectionId, $tmdb->collection($details->collectionId));
+            } catch (TmdbException $exception) {
+                report($exception);
+                $collection = MovieCollection::find($details->collectionId);
+            }
+        }
+
         return view('livewire.movie-show', [
             'details' => $details,
             'movie' => $movie,
             'status' => $statuses->for($this->tmdbId),
             'error' => $error,
             'subscribedProviderIds' => StreamingSubscription::providerIds(),
+            'collection' => $collection,
+            'collectionStatuses' => $collection !== null ? $statuses->forMany(array_column($collection->parts, 'id')) : [],
+            'plexIsConfigured' => app(PlexClient::class)->isConfigured(),
         ])->title($details->title ?? $movie->title ?? 'Film');
     }
 

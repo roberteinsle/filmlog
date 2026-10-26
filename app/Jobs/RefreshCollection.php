@@ -45,22 +45,6 @@ class RefreshCollection implements ShouldBeUnique, ShouldQueue
             return;
         }
 
-        $parts = collect($data['parts'] ?? [])
-            ->filter(fn (mixed $part): bool => is_array($part) && isset($part['id']))
-            ->map(fn (array $part): array => [
-                'id' => (int) $part['id'],
-                'title' => (string) ($part['title'] ?? $part['original_title'] ?? ''),
-                'release_date' => filled($part['release_date'] ?? null) ? (string) $part['release_date'] : null,
-                'poster_path' => $part['poster_path'] ?? null,
-            ])
-            // Angekündigte Teile ohne Datum ans Ende
-            ->sortBy(fn (array $part): string => $part['release_date'] ?? '9999-99-99')
-            ->values()
-            ->all();
-
-        MovieCollection::updateOrCreate(
-            ['id' => $this->collectionId],
-            ['name' => (string) ($data['name'] ?? 'Filmreihe'), 'parts' => $parts, 'cached_at' => now()],
-        );
+        MovieCollection::storeFromTmdb($this->collectionId, $data);
     }
 }

@@ -6,9 +6,12 @@ use App\Livewire\Forms\ViewingForm;
 use App\Models\Companion;
 use App\Models\Viewing;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
@@ -19,6 +22,12 @@ class Diary extends Component
 {
     private const int PER_PAGE = 50;
 
+    /**
+     * Filter nach Sichtung: '' = alle, '1' = Erstsichtungen, 'wdh' = alle Wiederholungen, '2', '3', … = genau die n. Sichtung.
+     */
+    #[Url(as: 'sichtung', except: '')]
+    public string $viewingFilter = '';
+
     public int $limit = self::PER_PAGE;
 
     public ViewingForm $form;
@@ -26,7 +35,7 @@ class Diary extends Component
     public bool $showViewingDialog = false;
 
     /**
-     * Die neuesten Sichtungen bis zum aktuellen Limit (plus eine, um „Mehr anzeigen“ zu erkennen).
+     * Die neuesten Sichtungen (gefiltert) bis zum aktuellen Limit (plus eine, um „Mehr anzeigen“ zu erkennen).
      * viewing_number zählt die Sichtungen je Film chronologisch: 2 = „2. Sichtung“.
      *
      * @return Collection<int, Viewing>
@@ -34,14 +43,30 @@ class Diary extends Component
     #[Computed]
     public function viewings(): Collection
     {
-        return Viewing::query()
-            ->select('viewings.*')
-            ->selectRaw('row_number() over (partition by tmdb_id order by watched_at, id) as viewing_number')
+        return $this->numberedViewings()
+            ->when($this->viewingFilter === 'wdh', fn (Builder $query) => $query->where('viewing_number', '>=', 2))
+            ->when(ctype_digit($this->viewingFilter), fn (Builder $query) => $query->where('viewing_number', (int) $this->viewingFilter))
             ->with(['movie:tmdb_id,title,year,poster_path', 'companions'])
             ->orderByDesc('watched_at')
             ->orderByDesc('id')
             ->limit($this->limit + 1)
             ->get();
+    }
+
+    /**
+     * Höchste Sichtungszahl eines Films (für die Filter-Auswahl).
+     */
+    #[Computed]
+    public function maxViewingNumber(): int
+    {
+        return (int) DB::query()->fromSub(DB::table('viewings')->selectRaw('count(*) as viewings')->groupBy('tmdb_id'), 'counts')->max('viewings');
+    }
+
+    public function filterViewings(string $filter): void
+    {
+        $this->viewingFilter = $filter === 'wdh' || (ctype_digit($filter) && (int) $filter >= 1 && (int) $filter <= $this->maxViewingNumber) ? $filter : '';
+        $this->limit = self::PER_PAGE;
+        unset($this->viewings);
     }
 
     /**
@@ -85,6 +110,19 @@ class Diary extends Component
     public function deleteViewing(int $viewingId): void
     {
         Viewing::findOrFail($viewingId)->delete();
+    }
+
+    /**
+     * Sichtungen mit viewing_number (1 = erste Sichtung des Films, 2 = zweite, …), filterbar wie eine Tabelle.
+     *
+     * @return Builder<Viewing>
+     */
+    private function numberedViewings(): Builder
+    {
+        return Viewing::query()->fromSub(
+            Viewing::query()->select('viewings.*')->selectRaw('row_number() over (partition by tmdb_id order by watched_at, id) as viewing_number'),
+            'viewings',
+        );
     }
 
     public function render(): View

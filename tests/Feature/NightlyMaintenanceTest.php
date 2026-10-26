@@ -31,7 +31,7 @@ test('stale movies and movies on lists are queued for a refresh', function () {
 test('refreshing a movie bypasses the HTTP cache and updates the local copy', function () {
     fakeTmdb();
     Movie::factory()->create(['tmdb_id' => 603, 'title' => 'Alter Titel', 'cached_at' => now()->subDays(40)]);
-    Cache::put('tmdb:movie:603:de-DE', ['id' => 603, 'title' => 'Veraltet aus dem Cache'], 3600);
+    Cache::put('tmdb:movie:v2:603:de-DE', ['id' => 603, 'title' => 'Veraltet aus dem Cache'], 3600);
 
     $this->travelTo(now()->setTime(3, 30));
     app()->call([new RefreshMovie(603), 'handle']);

@@ -49,6 +49,7 @@ final readonly class MovieDetails
         public ?int $collectionId,
         public ?string $collectionName,
         public ?string $imdbId,
+        public ?string $trailerKey = null,
     ) {}
 
     /**
@@ -93,6 +94,7 @@ final readonly class MovieDetails
             collectionId: isset($data['belongs_to_collection']['id']) ? (int) $data['belongs_to_collection']['id'] : null,
             collectionName: $data['belongs_to_collection']['name'] ?? null,
             imdbId: filled($data['imdb_id'] ?? null) ? $data['imdb_id'] : null,
+            trailerKey: self::extractTrailerKey($data['videos']['results'] ?? []),
         );
     }
 
@@ -139,5 +141,28 @@ final readonly class MovieDetails
                 'name' => (string) $provider['provider_name'],
                 'logo_path' => $provider['logo_path'] ?? null,
             ])->values()->all();
+    }
+
+    /**
+     * YouTube-Schlüssel des besten Trailers: deutsch vor englisch, offiziell vor inoffiziell, Trailer vor Teaser.
+     *
+     * @param  list<array<string, mixed>>  $videos
+     */
+    private static function extractTrailerKey(array $videos): ?string
+    {
+        $trailer = collect($videos)
+            ->filter(fn (mixed $video): bool => is_array($video)
+                && ($video['site'] ?? null) === 'YouTube'
+                && in_array($video['type'] ?? null, ['Trailer', 'Teaser'], true)
+                && is_string($video['key'] ?? null)
+                && preg_match('/^[A-Za-z0-9_-]{6,20}$/', $video['key']))
+            ->sortBy(fn (array $video): array => [
+                ($video['iso_639_1'] ?? null) === 'de' ? 0 : 1,
+                ($video['type'] ?? null) === 'Trailer' ? 0 : 1,
+                ($video['official'] ?? false) ? 0 : 1,
+            ])
+            ->first();
+
+        return $trailer['key'] ?? null;
     }
 }

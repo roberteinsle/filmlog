@@ -109,6 +109,14 @@
                     </p>
                 @endif
 
+                @if ($details->trailerKey)
+                    <a href="https://www.youtube.com/watch?v={{ $details->trailerKey }}" target="_blank" rel="noopener noreferrer"
+                       class="inline-flex items-center gap-2 rounded-lg border border-stone-700 px-3 py-1.5 text-sm text-stone-200 transition hover:border-stone-500">
+                        <svg class="size-4 text-red-500" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1c.4-1.6.5-4.8.5-4.8s0-3.2-.5-4.8zM9.75 15.02V8.98L15.5 12l-5.75 3.02z" /></svg>
+                        Trailer auf YouTube
+                    </a>
+                @endif
+
                 <div class="space-y-2 text-sm">
                     @php($yourProviders = collect($details->streamingProviders)->whereIn('id', $subscribedProviderIds)->values())
                     @if ($yourProviders->isNotEmpty() || $movie?->on_plex || $subscribedProviderIds !== [])
@@ -130,6 +138,19 @@
                                 <span class="text-stone-500">nicht in deinen Abos und nicht auf Plex</span>
                             @endif
                         </div>
+                    @endif
+
+                    @if ($plexIsConfigured)
+                        <p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                            <button type="button" wire:click="syncWithPlex" wire:loading.attr="disabled" wire:target="syncWithPlex"
+                                    class="inline-flex items-center gap-1.5 text-stone-500 transition hover:text-stone-200 disabled:opacity-50">
+                                <svg class="size-3.5" wire:loading.class="animate-spin" wire:target="syncWithPlex" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" /></svg>
+                                Mit Plex abgleichen
+                            </button>
+                            @if ($plexMessage)
+                                <span class="text-stone-400" role="status">{{ $plexMessage }}</span>
+                            @endif
+                        </p>
                     @endif
 
                     @if ($details->streamingProviders !== [])
@@ -185,6 +206,27 @@
                         </li>
                     @endforeach
                 </ul>
+            </section>
+        @endif
+
+        @if ($collection && count($collection->parts) > 1)
+            <section>
+                <h2 class="mb-3 text-sm font-medium tracking-wide text-stone-500 uppercase">{{ $collection->name }}</h2>
+                <ol class="flex gap-3 overflow-x-auto pb-2">
+                    @foreach ($collection->parts as $part)
+                        @php($isCurrent = $part['id'] === $tmdbId)
+                        <li wire:key="part-{{ $part['id'] }}" class="w-24 shrink-0">
+                            <a href="{{ route('movie', $part['id']) }}" wire:navigate @if ($isCurrent) aria-current="page" @endif class="group block">
+                                <x-poster :path="$part['poster_path']" :alt="$part['title']" size="w154" :class="\Illuminate\Support\Arr::toCssClasses(['w-24', 'ring-2 ring-amber-400' => $isCurrent])" />
+                                <span class="mt-1.5 flex items-start gap-1.5">
+                                    <x-status-dot :status="$collectionStatuses[$part['id']]" class="mt-1" />
+                                    <span @class(['line-clamp-2 text-xs', 'text-amber-300' => $isCurrent, 'text-stone-300 group-hover:text-amber-300' => ! $isCurrent])>{{ $part['title'] }}</span>
+                                </span>
+                                <span class="ml-4 text-xs text-stone-600">{{ $part['release_date'] ? substr($part['release_date'], 0, 4) : 'angekündigt' }}</span>
+                            </a>
+                        </li>
+                    @endforeach
+                </ol>
             </section>
         @endif
 

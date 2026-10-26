@@ -15,7 +15,8 @@ test('movie details are requested in German with all appended data and the beare
     Http::assertSent(fn (Request $request): bool => str_starts_with($request->url(), 'https://api.themoviedb.org/3/movie/603?')
         && $request->hasHeader('Authorization', 'Bearer test-token')
         && $request['language'] === 'de-DE'
-        && $request['append_to_response'] === 'release_dates,credits,watch/providers');
+        && $request['append_to_response'] === 'release_dates,credits,watch/providers,videos'
+        && $request['include_video_language'] === 'de,en');
 });
 
 test('search sends the query with German language and region and excludes adult titles', function () {

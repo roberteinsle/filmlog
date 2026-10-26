@@ -51,19 +51,20 @@ class TmdbClient
     }
 
     /**
-     * Details inkl. Freigaben, Cast/Crew und Streaming-Anbietern in einem Request.
+     * Details inkl. Freigaben, Cast/Crew, Streaming-Anbietern und Trailern in einem Request.
      *
      * @return array<string, mixed>
      */
     public function movie(int $tmdbId): array
     {
         return Cache::remember(
-            "tmdb:movie:{$tmdbId}:{$this->language}",
+            "tmdb:movie:v2:{$tmdbId}:{$this->language}",
             self::MOVIE_CACHE_SECONDS,
             function () use ($tmdbId): array {
                 $response = $this->get("movie/{$tmdbId}", [
                     'language' => $this->language,
-                    'append_to_response' => 'release_dates,credits,watch/providers',
+                    'append_to_response' => 'release_dates,credits,watch/providers,videos',
+                    'include_video_language' => substr($this->language, 0, 2).',en',
                 ]);
 
                 return $response->json();
@@ -128,7 +129,7 @@ class TmdbClient
 
     public function forgetMovie(int $tmdbId): void
     {
-        Cache::forget("tmdb:movie:{$tmdbId}:{$this->language}");
+        Cache::forget("tmdb:movie:v2:{$tmdbId}:{$this->language}");
     }
 
     public function region(): string

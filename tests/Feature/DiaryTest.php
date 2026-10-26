@@ -138,3 +138,46 @@ test('older viewings load on demand', function () {
         ->assertSee('Ganz alter Film')
         ->assertDontSee('Ältere Sichtungen anzeigen');
 });
+
+test('the diary can be filtered by viewing number', function () {
+    $matrix = Movie::factory()->create(['title' => 'Matrix']);
+    $heat = Movie::factory()->create(['title' => 'Heat']);
+    Movie::factory()->create();
+    Viewing::factory()->for($matrix)->create(['watched_at' => '2020-01-01 20:00']);
+    Viewing::factory()->for($matrix)->create(['watched_at' => '2023-01-01 20:00']);
+    Viewing::factory()->for($matrix)->create(['watched_at' => '2026-01-01 20:00']);
+    Viewing::factory()->for($heat)->create(['watched_at' => '2025-01-01 20:00']);
+    Viewing::factory()->for($heat)->create(['watched_at' => '2026-02-01 20:00']);
+
+    $titlesAndNumbers = fn ($component): array => $component->instance()->viewings
+        ->map(fn (Viewing $viewing): string => $viewing->movie->title.' '.$viewing->viewing_number)->all();
+
+    $component = Livewire::test(Diary::class)
+        ->assertSeeInOrder(['Alle', 'Erstsichtungen', 'Wiederholungen', '2. Sichtung', '3. Sichtung'])
+        ->assertDontSee('4. Sichtung');
+
+    $component->call('filterViewings', '2')->assertSet('viewingFilter', '2');
+    expect($titlesAndNumbers($component))->toBe(['Heat 2', 'Matrix 2']);
+
+    $component->call('filterViewings', '3');
+    expect($titlesAndNumbers($component))->toBe(['Matrix 3']);
+
+    $component->call('filterViewings', '1');
+    expect($titlesAndNumbers($component))->toBe(['Heat 1', 'Matrix 1']);
+
+    $component->call('filterViewings', 'wdh');
+    expect($titlesAndNumbers($component))->toBe(['Heat 2', 'Matrix 3', 'Matrix 2']);
+
+    $component->call('filterViewings', '9')->assertSet('viewingFilter', '');
+    expect($component->instance()->viewings)->toHaveCount(5);
+});
+
+test('the viewing filter is kept in the URL and hidden without repeat viewings', function () {
+    Viewing::factory()->for(Movie::factory()->create())->create();
+
+    Livewire::test(Diary::class)->assertDontSee('Erstsichtungen');
+
+    Livewire::withQueryParams(['sichtung' => '2'])->test(Diary::class)
+        ->assertSet('viewingFilter', '2')
+        ->assertSee('Keine Sichtungen für diesen Filter.');
+});

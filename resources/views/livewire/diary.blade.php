@@ -1,7 +1,20 @@
 <div>
     <x-page-header title="Tagebuch">Alle Sichtungen chronologisch, mit Bewertung, Begleitung und Notiz.</x-page-header>
 
-    @if ($months->isEmpty())
+    @if ($this->maxViewingNumber > 1)
+        <div class="mb-6 flex flex-wrap gap-2" role="group" aria-label="Nach Sichtung filtern">
+            <x-choice-chip wire:click="filterViewings('')" :active="$viewingFilter === ''">Alle</x-choice-chip>
+            <x-choice-chip wire:click="filterViewings('1')" :active="$viewingFilter === '1'">Erstsichtungen</x-choice-chip>
+            <x-choice-chip wire:click="filterViewings('wdh')" :active="$viewingFilter === 'wdh'">Wiederholungen</x-choice-chip>
+            @foreach (range(2, $this->maxViewingNumber) as $number)
+                <x-choice-chip wire:key="viewing-filter-{{ $number }}" wire:click="filterViewings('{{ $number }}')" :active="$viewingFilter === (string) $number">{{ $number }}. Sichtung</x-choice-chip>
+            @endforeach
+        </div>
+    @endif
+
+    @if ($months->isEmpty() && $viewingFilter !== '')
+        <x-placeholder>Keine Sichtungen für diesen Filter.</x-placeholder>
+    @elseif ($months->isEmpty())
         <x-placeholder>
             Noch keine Sichtungen.
             <a href="{{ route('search') }}" wire:navigate class="text-amber-300 underline-offset-2 hover:underline">Such einen Film</a>

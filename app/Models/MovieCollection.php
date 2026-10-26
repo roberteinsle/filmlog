@@ -48,4 +48,30 @@ class MovieCollection extends Model
 
         return array_values(array_filter($this->parts, fn (array $part): bool => filled($part['release_date']) && $part['release_date'] <= $today));
     }
+
+    /**
+     * Speichert eine Filmreihe aus der TMDB-Antwort (/collection/{id}); Teile nach Erscheinungsdatum,
+     * angekündigte Teile ohne Datum ans Ende.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public static function storeFromTmdb(int $collectionId, array $data): self
+    {
+        $parts = collect($data['parts'] ?? [])
+            ->filter(fn (mixed $part): bool => is_array($part) && isset($part['id']))
+            ->map(fn (array $part): array => [
+                'id' => (int) $part['id'],
+                'title' => (string) ($part['title'] ?? $part['original_title'] ?? ''),
+                'release_date' => filled($part['release_date'] ?? null) ? (string) $part['release_date'] : null,
+                'poster_path' => $part['poster_path'] ?? null,
+            ])
+            ->sortBy(fn (array $part): string => $part['release_date'] ?? '9999-99-99')
+            ->values()
+            ->all();
+
+        return static::updateOrCreate(
+            ['id' => $collectionId],
+            ['name' => (string) ($data['name'] ?? 'Filmreihe'), 'parts' => $parts, 'cached_at' => now()],
+        );
+    }
 }

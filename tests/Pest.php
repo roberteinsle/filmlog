@@ -57,7 +57,7 @@ function tmdbFixture(string $name): array
 }
 
 /**
- * Leitet TMDB-Requests auf Fixtures um: Suche nach „matrix“ und Film 603.
+ * Leitet TMDB-Requests auf Fixtures um: Suche nach „matrix“, Film 603 und seine Filmreihe 2344.
  */
 function fakeTmdb(): void
 {
@@ -65,6 +65,7 @@ function fakeTmdb(): void
     Http::fake([
         'api.themoviedb.org/3/search/movie*' => Http::response(tmdbFixture('search-matrix')),
         'api.themoviedb.org/3/movie/603*' => Http::response(tmdbFixture('movie-603')),
+        'api.themoviedb.org/3/collection/2344*' => Http::response(tmdbFixture('collection-2344')),
         'api.themoviedb.org/3/movie/*' => Http::response(['status_code' => 34, 'status_message' => 'The resource you requested could not be found.'], 404),
     ]);
 }

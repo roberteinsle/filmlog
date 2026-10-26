@@ -61,7 +61,6 @@ flowchart LR
     W --> TMDB[TMDB API]
     APP --> TMDB
     PLEX[Plex] -- Webhook --> APP
-    W --> RADARR[Radarr API]
     W --> PLEXAPI[Plex API]
 ```
 
@@ -76,7 +75,7 @@ Code-Struktur:
 - `app/Services/Tmdb/TmdbClient.php`: dünner HTTP-Client (Laravel `Http`, Retry, Rate-Limit)
 - `app/Actions/`: `SyncMovie`, `LogViewing`, `ImportTraktExport`, `SuggestForTonight`
 - `app/Livewire/`: ein Komponenten-Ordner pro Screen
-- `app/Jobs/`: `RefreshMovie`, `ImportTraktZip`, `PushToRadarr`, `SyncPlexLibrary`
+- `app/Jobs/`: `RefreshMovie`, `ImportTraktZip`, `SyncPlexLibrary`
 
 ## 4. Phasen
 
@@ -131,10 +130,10 @@ Jede Phase endet mit grünen Tests, einem PR und nach dem Merge einem automatisc
 - „Gegen den Strom“: größte |eigene Bewertung − TMDB-Bewertung|
 - „Lücken“: `collections`, in denen ≥ 1, aber nicht alle bereits erschienenen Teile gesehen sind
 
-### Phase 8 – Plex und Radarr (Kür)
+### Phase 8 – Plex (Kür)
 - Plex-Webhook `POST /webhooks/plex/{secret}` (geheimer Pfad-Token aus der Env), Event `media.scrobble` → Sichtung (`source=plex`), Zuordnung über die GUIDs `tmdb://` / `imdb://`
 - Nächtlicher Bestandsabgleich der Plex-Filmbibliothek → `movies.on_plex`
-- Radarr: neuer Watchlist-Eintrag → Job `PushToRadarr` (Qualitätsprofil und Root-Folder aus der Env)
+- ~~Radarr: neuer Watchlist-Eintrag → Job `PushToRadarr`~~ – aktuell out of scope (Entscheidung vom 26.10.2026)
 
 ## 5. Credentials – nie im Repo
 
@@ -145,7 +144,6 @@ Jede Phase endet mit grünen Tests, einem PR und nach dem Merge einem automatisc
 | `TMDB_TOKEN` | Coolify-Env, lokal `.env` |
 | `MAIL_USERNAME`, `MAIL_PASSWORD` (SES-SMTP-Credentials), `MAIL_FROM_ADDRESS`, ggf. `MAIL_HOST` | Coolify-Env |
 | `PLEX_WEBHOOK_SECRET`, `PLEX_URL`, `PLEX_TOKEN` | Coolify-Env (ab Phase 8) |
-| `RADARR_URL`, `RADARR_API_KEY` | Coolify-Env (ab Phase 8) |
 | `COOLIFY_TOKEN`, `COOLIFY_WEBHOOK` | GitHub Repository-Secrets |
 | GHCR-PAT `read:packages` | nur in `/root/.docker/config.json` auf dem Coolify-Server |
 

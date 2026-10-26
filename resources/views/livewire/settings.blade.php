@@ -1,0 +1,66 @@
+<div>
+    <x-page-header title="Einstellungen" />
+
+    <section class="max-w-2xl">
+        <h2 class="mb-1 text-lg font-semibold tracking-tight">Begleitungen</h2>
+        <p class="mb-4 text-sm text-stone-400">Mit wem du Filme schaust. Die max. FSK nutzt später „Heute Abend“, damit es z. B. mit der Familie passt.</p>
+
+        @if ($this->companions->isNotEmpty())
+            <ul wire:sort="moveCompanion" class="mb-4 divide-y divide-stone-800 rounded-xl border border-stone-800">
+                @foreach ($this->companions as $companion)
+                    <li wire:key="companion-{{ $companion->id }}" wire:sort:item="{{ $companion->id }}" class="flex items-center gap-3 bg-stone-950 px-3 py-2.5 first:rounded-t-xl last:rounded-b-xl">
+                        <button type="button" wire:sort:handle class="cursor-grab touch-none text-stone-600 hover:text-stone-300 active:cursor-grabbing" aria-label="{{ $companion->name }} verschieben">
+                            <svg class="size-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" /><circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" /><circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" /></svg>
+                        </button>
+
+                        @if ($editingId === $companion->id)
+                            <form wire:submit="saveCompanion" wire:sort:ignore class="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+                                <input type="text" wire:model="editName" maxlength="50" aria-label="Name" required
+                                       class="min-w-0 flex-1 rounded-lg border border-stone-700 bg-stone-900 px-3 py-1.5 text-sm outline-none focus:border-amber-400">
+                                <select wire:model="editMaxFsk" aria-label="max. FSK" class="rounded-lg border border-stone-700 bg-stone-900 px-2 py-1.5 text-sm outline-none focus:border-amber-400">
+                                    <option value="">ohne FSK-Grenze</option>
+                                    @foreach ($fskLevels as $fsk)
+                                        <option value="{{ $fsk }}">bis FSK {{ $fsk }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="submit" class="rounded-lg bg-amber-400 px-3 py-1.5 text-sm font-semibold text-stone-950 hover:bg-amber-300">Speichern</button>
+                                <button type="button" wire:click="cancelEditing" class="px-2 py-1.5 text-sm text-stone-400 hover:text-stone-100">Abbrechen</button>
+                                @error('editName') <p class="w-full text-sm text-red-400">{{ $message }}</p> @enderror
+                                @error('editMaxFsk') <p class="w-full text-sm text-red-400">{{ $message }}</p> @enderror
+                            </form>
+                        @else
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate">{{ $companion->name }}</p>
+                                <p class="text-xs text-stone-500">
+                                    {{ $companion->max_fsk !== null ? 'bis FSK '.$companion->max_fsk : 'ohne FSK-Grenze' }}
+                                    · {{ $companion->viewings_count }} {{ $companion->viewings_count === 1 ? 'Sichtung' : 'Sichtungen' }}
+                                </p>
+                            </div>
+                            <div class="flex shrink-0 gap-3 text-xs" wire:sort:ignore>
+                                <button type="button" wire:click="startEditing({{ $companion->id }})" class="text-stone-500 hover:text-stone-200">Bearbeiten</button>
+                                <button type="button" wire:click="deleteCompanion({{ $companion->id }})"
+                                        wire:confirm="„{{ $companion->name }}“ löschen?{{ $companion->viewings_count > 0 ? ' Die Begleitung verschwindet auch aus '.$companion->viewings_count.' '.($companion->viewings_count === 1 ? 'Sichtung' : 'Sichtungen').'.' : '' }}"
+                                        class="text-stone-500 hover:text-red-400">Löschen</button>
+                            </div>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+
+        <form wire:submit="addCompanion" class="flex flex-wrap items-start gap-2">
+            <div class="min-w-0 flex-1">
+                <input type="text" wire:model="name" maxlength="50" placeholder="Neue Begleitung, z. B. Jasmin" aria-label="Name der neuen Begleitung"
+                       class="w-full rounded-lg border border-stone-700 bg-stone-900 px-3 py-2 text-sm outline-none placeholder:text-stone-600 focus:border-amber-400">
+                @error('name') <p class="mt-1 text-sm text-red-400">{{ $message }}</p> @enderror
+            </div>
+            <select wire:model="maxFsk" aria-label="max. FSK der neuen Begleitung" class="rounded-lg border border-stone-700 bg-stone-900 px-2 py-2 text-sm outline-none focus:border-amber-400">
+                <option value="">ohne FSK-Grenze</option>
+                @foreach ($fskLevels as $fsk)
+                    <option value="{{ $fsk }}">bis FSK {{ $fsk }}</option>
+                @endforeach
+            </select>
+            <button type="submit" class="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-stone-950 hover:bg-amber-300">Hinzufügen</button>
+        </form>
+    </section>
+</div>

@@ -12,6 +12,7 @@ test('every screen renders for a logged-in user', function (string $routeName, s
     ['lists', 'Listen'],
     ['diary', 'Tagebuch'],
     ['review', 'Rückblick'],
+    ['settings', 'Einstellungen'],
 ]);
 
 test('the header shows the short commit and its date', function () {

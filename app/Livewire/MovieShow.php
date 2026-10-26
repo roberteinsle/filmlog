@@ -3,27 +3,79 @@
 namespace App\Livewire;
 
 use App\Actions\SyncMovie;
+use App\Livewire\Forms\ViewingForm;
+use App\Models\Companion;
 use App\Models\Movie;
+use App\Models\MovieList;
 use App\Services\MovieStatusResolver;
 use App\Services\Tmdb\MovieDetails;
 use App\Services\Tmdb\MovieNotFoundException;
 use App\Services\Tmdb\TmdbClient;
 use App\Services\Tmdb\TmdbException;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
  * Filmseite: Status-Banner ganz oben, darunter die Details live von TMDB.
+ * „Gesehen“ öffnet den Sichtungs-Dialog; stand der Film auf der Watchlist, fragt Filmlog danach, ob er runter soll.
  */
 class MovieShow extends Component
 {
     #[Locked]
     public int $tmdbId;
 
+    public ViewingForm $form;
+
+    public bool $showViewingDialog = false;
+
+    public bool $askRemoveFromWatchlist = false;
+
     public function mount(int $tmdbId): void
     {
         $this->tmdbId = $tmdbId;
+    }
+
+    /**
+     * @return Collection<int, Companion>
+     */
+    #[Computed]
+    public function companions(): Collection
+    {
+        return Companion::query()->ordered()->get();
+    }
+
+    public function openViewingDialog(): void
+    {
+        $this->form->startNew();
+        $this->showViewingDialog = true;
+    }
+
+    public function closeViewingDialog(): void
+    {
+        $this->showViewingDialog = false;
+    }
+
+    public function saveViewing(MovieStatusResolver $statuses): void
+    {
+        Movie::findOrFail($this->tmdbId);
+
+        $this->form->store($this->tmdbId);
+        $this->showViewingDialog = false;
+        $this->askRemoveFromWatchlist = $statuses->for($this->tmdbId)->onWatchlist;
+    }
+
+    public function removeFromWatchlist(): void
+    {
+        MovieList::watchlist()->movies()->detach($this->tmdbId);
+        $this->askRemoveFromWatchlist = false;
+    }
+
+    public function keepOnWatchlist(): void
+    {
+        $this->askRemoveFromWatchlist = false;
     }
 
     public function render(TmdbClient $tmdb, SyncMovie $syncMovie, MovieStatusResolver $statuses): View

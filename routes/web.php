@@ -8,6 +8,7 @@ use App\Livewire\Lists;
 use App\Livewire\MovieShow;
 use App\Livewire\Review;
 use App\Livewire\Search;
+use App\Livewire\Settings;
 use App\Livewire\Tonight;
 use App\Services\LoginLinks;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,7 @@ Route::middleware(['auth', 'login.fresh'])->group(function () {
     Route::livewire('/listen', Lists::class)->name('lists');
     Route::livewire('/tagebuch', Diary::class)->name('diary');
     Route::livewire('/rueckblick', Review::class)->name('review');
+    Route::livewire('/einstellungen', Settings::class)->name('settings');
 
     Route::post('/abmelden', LogoutController::class)->name('logout');
 });

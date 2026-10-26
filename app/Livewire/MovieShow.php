@@ -7,6 +7,7 @@ use App\Livewire\Forms\ViewingForm;
 use App\Models\Companion;
 use App\Models\Movie;
 use App\Models\MovieList;
+use App\Models\Viewing;
 use App\Services\MovieStatusResolver;
 use App\Services\Tmdb\MovieDetails;
 use App\Services\Tmdb\MovieNotFoundException;
@@ -57,14 +58,54 @@ class MovieShow extends Component
     public function closeViewingDialog(): void
     {
         $this->showViewingDialog = false;
+        $this->form->viewing = null;
+        unset($this->viewings);
     }
 
+    /**
+     * Alle Sichtungen dieses Films, neueste zuerst (für das aufklappbare Banner).
+     *
+     * @return Collection<int, Viewing>
+     */
+    #[Computed]
+    public function viewings(): Collection
+    {
+        return Viewing::query()
+            ->where('tmdb_id', $this->tmdbId)
+            ->with('companions')
+            ->orderByDesc('watched_at')
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    public function editViewing(int $viewingId): void
+    {
+        $this->form->edit($this->ownViewing($viewingId));
+        $this->showViewingDialog = true;
+    }
+
+    public function deleteViewing(int $viewingId): void
+    {
+        $this->ownViewing($viewingId)->delete();
+        unset($this->viewings);
+    }
+
+    /**
+     * Speichert eine neue Sichtung oder die bearbeitete aus dem Banner.
+     */
     public function saveViewing(MovieStatusResolver $statuses): void
     {
+        if ($this->form->viewing !== null) {
+            $this->form->update();
+            $this->closeViewingDialog();
+
+            return;
+        }
+
         Movie::findOrFail($this->tmdbId);
 
         $this->form->store($this->tmdbId);
-        $this->showViewingDialog = false;
+        $this->closeViewingDialog();
         $this->askRemoveFromWatchlist = $statuses->for($this->tmdbId)->onWatchlist;
     }
 
@@ -77,6 +118,14 @@ class MovieShow extends Component
     public function keepOnWatchlist(): void
     {
         $this->askRemoveFromWatchlist = false;
+    }
+
+    /**
+     * Nur Sichtungen dieses Films lassen sich hier bearbeiten oder löschen.
+     */
+    private function ownViewing(int $viewingId): Viewing
+    {
+        return Viewing::query()->where('tmdb_id', $this->tmdbId)->findOrFail($viewingId);
     }
 
     /**

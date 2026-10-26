@@ -87,6 +87,7 @@ test('the nightly tasks are scheduled', function (string $command, string $time)
         ->and($event->expression)->toBe($time);
 })->with([
     ['filmlog:refresh-movies', '30 3 * * *'],
+    ['filmlog:refresh-collections', '45 3 * * *'],
     ['queue:prune-failed', '0 4 * * *'],
     ['filmlog:prune-imports', '15 4 * * *'],
 ]);

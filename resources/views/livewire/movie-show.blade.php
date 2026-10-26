@@ -1,6 +1,37 @@
 <div class="space-y-6">
     <div class="space-y-3">
-        <x-status-banner :status="$status" />
+        <x-status-banner :status="$status">
+            @if ($status->state === \App\Services\WatchState::Seen)
+                <x-slot:details>
+                    <ol class="divide-y divide-red-200/10">
+                        @foreach ($this->viewings as $viewing)
+                            @php($watchedAt = $viewing->watched_at->timezone(config('app.timezone')))
+                            <li wire:key="banner-viewing-{{ $viewing->id }}" class="flex items-start gap-3 py-2">
+                                <div class="min-w-0 flex-1">
+                                    <p>
+                                        <span class="font-medium">{{ $watchedAt->translatedFormat('D, d.m.Y') }}</span>
+                                        @if ($viewing->rating !== null)
+                                            · <span class="font-semibold">{{ $viewing->rating }}</span><span class="opacity-60">/10</span>
+                                        @endif
+                                        · {{ $viewing->companions->isEmpty() ? 'allein' : 'mit '.$viewing->companions->pluck('name')->join(', ', ' und ') }}
+                                        @if ($viewing->source !== 'manual')
+                                            <span class="ml-1 rounded border border-red-200/20 px-1 text-xs opacity-70">{{ ucfirst($viewing->source) }}</span>
+                                        @endif
+                                    </p>
+                                    @if ($viewing->note)
+                                        <p class="italic opacity-80">„{{ $viewing->note }}“</p>
+                                    @endif
+                                </div>
+                                <div class="flex shrink-0 gap-3 text-xs">
+                                    <button type="button" wire:click="editViewing({{ $viewing->id }})" class="opacity-70 hover:opacity-100">Bearbeiten</button>
+                                    <button type="button" wire:click="deleteViewing({{ $viewing->id }})" wire:confirm="Sichtung vom {{ $watchedAt->format('d.m.Y') }} löschen?" class="opacity-70 hover:text-red-300 hover:opacity-100">Löschen</button>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ol>
+                </x-slot:details>
+            @endif
+        </x-status-banner>
 
         @if ($movie)
             <div class="flex justify-end gap-2">
@@ -14,7 +45,7 @@
     </div>
 
     @if ($showViewingDialog)
-        <x-modal :title="($details->title ?? $movie->title).' gesehen'" close="closeViewingDialog">
+        <x-modal :title="$form->viewing ? 'Sichtung vom '.$form->viewing->watched_at->timezone(config('app.timezone'))->format('d.m.Y').' bearbeiten' : ($details->title ?? $movie->title).' gesehen'" close="closeViewingDialog">
             <x-viewing-form :companions="$this->companions" submit="saveViewing" cancel="closeViewingDialog" />
         </x-modal>
     @endif

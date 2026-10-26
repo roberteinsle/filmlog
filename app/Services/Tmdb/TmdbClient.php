@@ -69,6 +69,25 @@ class TmdbClient
     }
 
     /**
+     * Filmreihe mit allen Teilen (/collection/{id}).
+     *
+     * @return array<string, mixed>
+     */
+    public function collection(int $collectionId): array
+    {
+        return Cache::remember(
+            "tmdb:collection:{$collectionId}:{$this->language}",
+            self::MOVIE_CACHE_SECONDS,
+            fn (): array => $this->get("collection/{$collectionId}", ['language' => $this->language])->json(),
+        );
+    }
+
+    public function forgetCollection(int $collectionId): void
+    {
+        Cache::forget("tmdb:collection:{$collectionId}:{$this->language}");
+    }
+
+    /**
      * TMDB-ID zu einer IMDb-ID (tt…) über /find; null, wenn TMDB den Film nicht kennt.
      */
     public function findMovieIdByImdbId(string $imdbId): ?int

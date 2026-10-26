@@ -81,6 +81,28 @@
                 </dd>
             </div>
             <div>
+                <dt class="text-stone-500">Welche Plex-Konten ins Tagebuch schreiben</dt>
+                <dd class="mt-1">
+                    @if ($plexAccounts->isEmpty())
+                        <span class="text-stone-500">Konten erscheinen hier, sobald sie in Plex etwas abspielen.</span>
+                    @else
+                        <ul class="space-y-1">
+                            @foreach ($plexAccounts as $plexAccount)
+                                <li wire:key="plex-account-{{ $plexAccount->id }}">
+                                    <label class="flex cursor-pointer items-center gap-3 py-1">
+                                        <input type="checkbox" wire:click="togglePlexAccount({{ $plexAccount->id }})" @checked($plexAccount->counts_viewings)
+                                               class="size-4 rounded border-stone-600 bg-stone-900 accent-amber-400">
+                                        <span class="text-stone-200">{{ $plexAccount->title }}</span>
+                                        <span class="text-xs text-stone-600">zuletzt {{ $plexAccount->last_seen_at?->timezone(config('app.timezone'))->format('d.m.Y H:i') }}</span>
+                                    </label>
+                                </li>
+                            @endforeach
+                        </ul>
+                        <p class="mt-1 text-xs text-stone-600">Fehlt ein Profil? Einfach in Plex mit diesem Profil kurz einen Film starten.</p>
+                    @endif
+                </dd>
+            </div>
+            <div>
                 <dt class="text-stone-500">Bibliothek</dt>
                 <dd class="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2">
                     @if (! $plexIsConfigured)

@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Jobs\SyncPlexLibrary;
 use App\Models\Companion;
 use App\Models\Movie;
+use App\Models\PlexAccount;
 use App\Services\Plex\PlexClient;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
@@ -139,6 +140,15 @@ class Settings extends Component
         }
     }
 
+    /**
+     * Legt fest, ob Scrobbles dieses Plex-Kontos als Sichtung zählen.
+     */
+    public function togglePlexAccount(int $plexAccountId): void
+    {
+        $account = PlexAccount::findOrFail($plexAccountId);
+        $account->update(['counts_viewings' => ! $account->counts_viewings]);
+    }
+
     public function render(PlexClient $plex): View
     {
         $webhookSecret = (string) config('services.plex.webhook_secret');
@@ -149,6 +159,7 @@ class Settings extends Component
             'plexWebhookUrl' => $webhookSecret !== '' ? route('webhooks.plex', $webhookSecret) : null,
             'plexLastSync' => Cache::get(SyncPlexLibrary::LAST_SYNC_CACHE_KEY),
             'plexMovies' => Movie::query()->where('on_plex', true)->count(),
+            'plexAccounts' => PlexAccount::query()->orderByDesc('counts_viewings')->orderBy('title')->get(),
         ]);
     }
 

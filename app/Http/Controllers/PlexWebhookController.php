@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\LogPlexScrobble;
+use App\Models\PlexAccount;
 use App\Services\Plex\PlexGuids;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
 /**
- * Empfängt Plex-Webhooks (multipart, Feld „payload“ mit JSON). Nur „media.scrobble“ für Filme
- * des Webhook-Kontos selbst wird zur Sichtung; alles andere wird quittiert und ignoriert.
+ * Empfängt Plex-Webhooks (multipart, Feld „payload“ mit JSON). Jedes auslösende Plex-Konto wird gemerkt;
+ * „media.scrobble“ eines Films wird zur Sichtung, wenn das Konto in den Einstellungen zählt
+ * (Standard: nur das Konto, dem der Webhook gehört). Alles andere wird quittiert und ignoriert.
  */
 class PlexWebhookController extends Controller
 {
@@ -27,8 +29,13 @@ class PlexWebhookController extends Controller
 
         $metadata = is_array($payload['Metadata'] ?? null) ? $payload['Metadata'] : [];
 
-        // „user“ ist false, wenn jemand anderes auf deinem Server schaut.
-        if (($payload['event'] ?? null) !== 'media.scrobble' || ($metadata['type'] ?? null) !== 'movie' || ($payload['user'] ?? true) !== true) {
+        // „user“ ist false, wenn ein anderes Konto oder ein verwaltetes Plex-Home-Profil schaut.
+        $isWebhookOwner = ($payload['user'] ?? true) === true;
+        $account = is_numeric($payload['Account']['id'] ?? null)
+            ? PlexAccount::remember((int) $payload['Account']['id'], mb_substr((string) ($payload['Account']['title'] ?? 'Unbekannt'), 0, 100), $isWebhookOwner)
+            : null;
+
+        if (($payload['event'] ?? null) !== 'media.scrobble' || ($metadata['type'] ?? null) !== 'movie' || ! ($account?->counts_viewings ?? $isWebhookOwner)) {
             return response('', 204);
         }
 

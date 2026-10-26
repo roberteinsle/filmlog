@@ -1,9 +1,12 @@
 <?php
 
 use App\Jobs\LogPlexScrobble;
+use App\Livewire\Settings;
+use App\Models\PlexAccount;
 use App\Services\Plex\PlexGuids;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\TestResponse;
+use Livewire\Livewire;
 
 beforeEach(function () {
     config(['services.plex.webhook_secret' => 'geheim-123']);
@@ -79,3 +82,44 @@ test('TMDB and IMDb ids are read from new and legacy Plex agents', function (arr
     'legacy IMDb agent' => [['guid' => 'com.plexapp.agents.imdb://tt0133093?lang=de'], null, 'tt0133093'],
     'unknown' => [['guid' => 'local://123'], null, null],
 ]);
+
+test('every Plex account that sends a webhook is remembered, only the owner counts at first', function () {
+    postPlexWebhook(plexPayload(['event' => 'media.play', 'Account' => ['id' => 1, 'title' => 'robert.einsle']]));
+    postPlexWebhook(plexPayload(['event' => 'media.play', 'user' => false, 'Account' => ['id' => 2, 'title' => 'Robert']]));
+    postPlexWebhook(plexPayload(['event' => 'media.play', 'user' => false, 'Account' => ['id' => 2, 'title' => 'Robert (Profil)']]));
+
+    expect(PlexAccount::query()->orderBy('id')->get(['id', 'title', 'counts_viewings'])->toArray())->toBe([
+        ['id' => 1, 'title' => 'robert.einsle', 'counts_viewings' => true],
+        ['id' => 2, 'title' => 'Robert (Profil)', 'counts_viewings' => false],
+    ]);
+    Queue::assertNothingPushed();
+});
+
+test('scrobbles of a managed Plex Home profile count once it is selected', function () {
+    PlexAccount::factory()->create(['id' => 2, 'title' => 'Robert', 'counts_viewings' => true]);
+
+    postPlexWebhook(plexPayload(['user' => false, 'Account' => ['id' => 2, 'title' => 'Robert']]))->assertStatus(202);
+
+    Queue::assertPushed(LogPlexScrobble::class);
+});
+
+test('a deselected owner account no longer counts', function () {
+    PlexAccount::factory()->create(['id' => 1, 'title' => 'robert.einsle', 'counts_viewings' => false]);
+
+    postPlexWebhook(plexPayload(['Account' => ['id' => 1, 'title' => 'robert.einsle']]))->assertNoContent();
+
+    Queue::assertNothingPushed();
+});
+
+test('accounts can be selected in the settings', function () {
+    actingAsLoggedInUser();
+    $profile = PlexAccount::factory()->create(['title' => 'Robert', 'counts_viewings' => false]);
+    PlexAccount::factory()->create(['title' => 'Jasmin', 'counts_viewings' => false]);
+
+    Livewire::test(Settings::class)
+        ->assertSee('Welche Plex-Konten ins Tagebuch schreiben')
+        ->assertSeeInOrder(['Jasmin', 'Robert'])
+        ->call('togglePlexAccount', $profile->id);
+
+    expect($profile->refresh()->counts_viewings)->toBeTrue();
+});

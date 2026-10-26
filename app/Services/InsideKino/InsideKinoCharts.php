@@ -62,7 +62,8 @@ class InsideKinoCharts
     {
         $document = new DOMDocument;
         $previous = libxml_use_internal_errors(true);
-        $document->loadHTML('<?xml encoding="UTF-8">'.$html, LIBXML_NOWARNING | LIBXML_NOERROR);
+        // Nicht-ASCII als Entities: so ist egal, welchen Zeichensatz libxml aus <meta> ableitet (je nach Version unterschiedlich).
+        $document->loadHTML(mb_encode_numericentity($html, [0x80, 0x10FFFF, 0, 0x1FFFFF], 'UTF-8'), LIBXML_NOWARNING | LIBXML_NOERROR);
         libxml_clear_errors();
         libxml_use_internal_errors($previous);
 

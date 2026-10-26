@@ -65,6 +65,47 @@
     </section>
 
     <section class="mt-10 max-w-2xl">
+        <h2 class="mb-1 text-lg font-semibold tracking-tight">Plex</h2>
+        <p class="mb-4 text-sm text-stone-400">Zu Ende geschaute Filme landen automatisch im Tagebuch; nachts gleicht Filmlog ab, welche Filme auf Plex liegen.</p>
+
+        <dl class="space-y-3 text-sm">
+            <div>
+                <dt class="text-stone-500">Webhook-Adresse <span class="text-stone-600">(in Plex unter Einstellungen → Webhooks eintragen, braucht Plex Pass)</span></dt>
+                <dd class="mt-1">
+                    @if ($plexWebhookUrl)
+                        <input type="text" readonly value="{{ $plexWebhookUrl }}" x-on:focus="$el.select()" aria-label="Webhook-Adresse"
+                               class="w-full rounded-lg border border-stone-700 bg-stone-900 px-3 py-2 font-mono text-xs text-stone-300 outline-none focus:border-amber-400">
+                    @else
+                        <span class="text-amber-300">PLEX_WEBHOOK_SECRET ist nicht gesetzt.</span>
+                    @endif
+                </dd>
+            </div>
+            <div>
+                <dt class="text-stone-500">Bibliothek</dt>
+                <dd class="mt-1 flex flex-wrap items-center gap-x-4 gap-y-2">
+                    @if (! $plexIsConfigured)
+                        <span class="text-amber-300">PLEX_URL und PLEX_TOKEN sind nicht gesetzt.</span>
+                    @else
+                        <span class="text-stone-300">
+                            {{ $plexMovies }} {{ $plexMovies === 1 ? 'Film' : 'Filme' }} auf Plex
+                            @if ($plexLastSync)
+                                · abgeglichen {{ \Illuminate\Support\Carbon::parse($plexLastSync['at'])->timezone(config('app.timezone'))->format('d.m.Y H:i') }}
+                            @else
+                                · noch nie abgeglichen
+                            @endif
+                        </span>
+                        @if ($plexSyncQueued)
+                            <span class="text-amber-300">Abgleich läuft im Hintergrund – Seite gleich neu laden.</span>
+                        @else
+                            <button type="button" wire:click="syncPlex" class="text-amber-300 hover:text-amber-200">Jetzt abgleichen</button>
+                        @endif
+                    @endif
+                </dd>
+            </div>
+        </dl>
+    </section>
+
+    <section class="mt-10 max-w-2xl">
         <h2 class="mb-1 text-lg font-semibold tracking-tight">Daten</h2>
         <p class="mb-4 text-sm text-stone-400">Verlauf, Bewertungen, Watchlist und Listen aus einem Trakt-Export übernehmen.</p>
         <a href="{{ route('import') }}" wire:navigate class="inline-flex items-center gap-2 rounded-lg border border-stone-700 px-4 py-2 text-sm font-medium text-stone-200 transition hover:border-stone-500">Trakt-Import öffnen</a>

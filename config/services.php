@@ -41,4 +41,14 @@ return [
         'image_base_url' => env('TMDB_IMAGE_BASE_URL', 'https://image.tmdb.org/t/p'),
     ],
 
+    /*
+    | Plex: Webhook (media.scrobble → Sichtung) unter /webhooks/plex/{webhook_secret}
+    | und nächtlicher Abgleich der Filmbibliothek über url + token.
+    */
+    'plex' => [
+        'url' => env('PLEX_URL'),
+        'token' => env('PLEX_TOKEN'),
+        'webhook_secret' => env('PLEX_WEBHOOK_SECRET'),
+    ],
+
 ];

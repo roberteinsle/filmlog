@@ -2,9 +2,13 @@
 
 namespace App\Livewire;
 
+use App\Jobs\SyncPlexLibrary;
 use App\Models\Companion;
+use App\Models\Movie;
+use App\Services\Plex\PlexClient;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
@@ -20,6 +24,8 @@ class Settings extends Component
     public string $name = '';
 
     public string $maxFsk = '';
+
+    public bool $plexSyncQueued = false;
 
     public ?int $editingId = null;
 
@@ -122,9 +128,28 @@ class Settings extends Component
         unset($this->companions);
     }
 
-    public function render(): View
+    /**
+     * Plex-Bibliothek sofort abgleichen statt erst in der Nacht.
+     */
+    public function syncPlex(PlexClient $plex): void
     {
-        return view('livewire.settings', ['fskLevels' => Companion::FSK_LEVELS]);
+        if ($plex->isConfigured()) {
+            SyncPlexLibrary::dispatch();
+            $this->plexSyncQueued = true;
+        }
+    }
+
+    public function render(PlexClient $plex): View
+    {
+        $webhookSecret = (string) config('services.plex.webhook_secret');
+
+        return view('livewire.settings', [
+            'fskLevels' => Companion::FSK_LEVELS,
+            'plexIsConfigured' => $plex->isConfigured(),
+            'plexWebhookUrl' => $webhookSecret !== '' ? route('webhooks.plex', $webhookSecret) : null,
+            'plexLastSync' => Cache::get(SyncPlexLibrary::LAST_SYNC_CACHE_KEY),
+            'plexMovies' => Movie::query()->where('on_plex', true)->count(),
+        ]);
     }
 
     private function toFsk(?string $value): ?int

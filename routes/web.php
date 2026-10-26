@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginLinkController;
 use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\PlexWebhookController;
 use App\Livewire\Auth\Login;
 use App\Livewire\Diary;
 use App\Livewire\Lists;
@@ -39,3 +40,8 @@ Route::middleware(['auth', 'login.fresh'])->group(function () {
 
     Route::post('/abmelden', LogoutController::class)->name('logout');
 });
+
+// Ohne Login, abgesichert über das geheime Pfad-Token (PLEX_WEBHOOK_SECRET)
+Route::post('/webhooks/plex/{secret}', PlexWebhookController::class)
+    ->middleware('throttle:60,1')
+    ->name('webhooks.plex');

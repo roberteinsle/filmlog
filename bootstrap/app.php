@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Coolify-Proxy (Traefik/Caddy) terminiert TLS vor dem Container
         $middleware->trustProxies(at: '*');
 
+        // Plex schickt Webhooks ohne CSRF-Token; abgesichert über das geheime Pfad-Token.
+        $middleware->validateCsrfTokens(except: ['webhooks/*']);
+
         $middleware->alias([
             'login.fresh' => EnsureLoginIsFresh::class,
         ]);

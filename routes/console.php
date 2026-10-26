@@ -1,5 +1,7 @@
 <?php
 
+use App\Jobs\SyncPlexLibrary;
+use App\Services\Plex\PlexClient;
 use Illuminate\Support\Facades\Schedule;
 
 /*
@@ -10,6 +12,9 @@ use Illuminate\Support\Facades\Schedule;
 | Zeiten in APP_TIMEZONE (Europe/Berlin). Die Jobs selbst laufen im worker.
 |
 */
+
+// Vor dem Refresh, damit neue Plex-Filme gleich ihre TMDB-Details bekommen.
+Schedule::job(new SyncPlexLibrary)->dailyAt('03:15')->when(fn (): bool => app(PlexClient::class)->isConfigured());
 
 Schedule::command('filmlog:refresh-movies')->dailyAt('03:30')->withoutOverlapping()->onOneServer();
 

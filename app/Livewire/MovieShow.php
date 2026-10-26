@@ -7,6 +7,7 @@ use App\Livewire\Forms\ViewingForm;
 use App\Models\Companion;
 use App\Models\Movie;
 use App\Models\MovieList;
+use App\Models\StreamingSubscription;
 use App\Models\Viewing;
 use App\Services\MovieStatusResolver;
 use App\Services\Tmdb\MovieDetails;
@@ -155,6 +156,7 @@ class MovieShow extends Component
             'movie' => $movie,
             'status' => $statuses->for($this->tmdbId),
             'error' => $error,
+            'subscribedProviderIds' => StreamingSubscription::providerIds(),
         ])->title($details->title ?? $movie->title ?? 'Film');
     }
 

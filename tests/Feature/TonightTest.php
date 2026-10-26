@@ -4,6 +4,7 @@ use App\Livewire\Tonight;
 use App\Models\Companion;
 use App\Models\Movie;
 use App\Models\MovieList;
+use App\Models\StreamingSubscription;
 use App\Models\Viewing;
 use Livewire\Livewire;
 
@@ -163,4 +164,30 @@ test('closing the rating keeps the viewing and the movie can stay on the watchli
 
     expect(Viewing::count())->toBe(1)
         ->and(MovieList::watchlist()->contains($heat->tmdb_id))->toBeTrue();
+});
+
+test('the source switches between watchlist and Plex library and is kept in the URL', function () {
+    tonightCandidate(['title' => 'Watchlist-Film']);
+    Movie::factory()->create(['title' => 'Plex-Film', 'on_plex' => true, 'fsk' => 12, 'runtime' => 110]);
+
+    $component = Livewire::test(Tonight::class)->assertSet('source', 'watchlist')->assertSee('Woher?');
+    expect($component->instance()->result['suggestions']->pluck('title')->all())->toBe(['Watchlist-Film']);
+
+    $component->call('chooseSource', 'plex')->assertSet('source', 'plex');
+    expect($component->instance()->result['suggestions']->pluck('title')->all())->toBe(['Plex-Film']);
+
+    $component->call('chooseSource', 'unsinn')->assertSet('source', 'watchlist');
+
+    expect(Livewire::withQueryParams(['quelle' => 'plex'])->test(Tonight::class)->instance()->result['suggestions']->pluck('title')->all())->toBe(['Plex-Film']);
+});
+
+test('suggestions show which of your subscriptions stream them', function () {
+    fakeTmdb();
+    StreamingSubscription::factory()->create(['provider_id' => 8, 'name' => 'Netflix']);
+    StreamingSubscription::factory()->create(['provider_id' => 337, 'name' => 'Disney Plus']);
+    tonightCandidate(['tmdb_id' => 603, 'title' => 'Matrix']);
+
+    Livewire::test(Tonight::class)
+        ->assertSeeInOrder(['Matrix', 'Watchlist', 'Netflix', 'Läuft gerade'])
+        ->assertDontSee('Disney Plus');
 });

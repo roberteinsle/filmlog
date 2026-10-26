@@ -10,7 +10,7 @@ use Random\Engine\Mt19937;
 use Random\Randomizer;
 
 /**
- * Vorschläge für heute Abend: ungesehene Filme von der Watchlist oder aus dem Plex-Bestand, passend zu
+ * Vorschläge für heute Abend: ungesehene Filme von der Watchlist oder (umschaltbar) aus dem Plex-Bestand, passend zu
  * Altersfreigabe, Zeit und Stimmung. Reihenfolge: Watchlist-Rang, dann TMDB-Bewertung – mit leichtem Zufall,
  * damit nicht jeden Abend dieselben drei oben stehen.
  */
@@ -20,6 +20,10 @@ class SuggestForTonight
      * Um wie viele Plätze ein Film durch den Zufall höchstens nach vorn rutschen kann.
      */
     private const float JITTER = 4.0;
+
+    public const string SOURCE_WATCHLIST = 'watchlist';
+
+    public const string SOURCE_PLEX = 'plex';
 
     /**
      * @param  list<int>  $genreIds  Film passt, wenn er mindestens eines der Genres hat; leer = egal
@@ -33,8 +37,9 @@ class SuggestForTonight
         array $excludedTmdbIds = [],
         int $seed = 0,
         int $count = 3,
+        string $source = self::SOURCE_WATCHLIST,
     ): array {
-        $candidates = $this->candidates($maxFsk, $maxRuntime, $genreIds)->get();
+        $candidates = $this->candidates($source, $maxFsk, $maxRuntime, $genreIds)->get();
         $remaining = $candidates->reject(fn (Movie $movie): bool => in_array($movie->tmdb_id, $excludedTmdbIds, true))->values();
         $randomizer = new Randomizer(new Mt19937($seed));
 
@@ -49,12 +54,12 @@ class SuggestForTonight
     }
 
     /**
-     * Passende ungesehene Filme in Grundreihenfolge; watchlist_rank ist null für Filme nur aus dem Plex-Bestand.
+     * Passende ungesehene Filme in Grundreihenfolge; watchlist_rank ist null für Plex-Filme, die nicht auf der Watchlist stehen.
      *
      * @param  list<int>  $genreIds
      * @return Builder<Movie>
      */
-    private function candidates(?int $maxFsk, ?int $maxRuntime, array $genreIds): Builder
+    private function candidates(string $source, ?int $maxFsk, ?int $maxRuntime, array $genreIds): Builder
     {
         $watchlistId = MovieList::watchlist()->id;
 
@@ -63,7 +68,11 @@ class SuggestForTonight
             ->leftJoin('list_items as watchlist', fn ($join) => $join
                 ->on('watchlist.tmdb_id', '=', 'movies.tmdb_id')
                 ->where('watchlist.list_id', $watchlistId))
-            ->where(fn (Builder $query) => $query->whereNotNull('watchlist.list_id')->orWhere('movies.on_plex', true))
+            ->when(
+                $source === self::SOURCE_PLEX,
+                fn (Builder $query) => $query->where('movies.on_plex', true),
+                fn (Builder $query) => $query->whereNotNull('watchlist.list_id'),
+            )
             ->whereNotExists(fn ($query) => $query->selectRaw('1')->from('viewings')->whereColumn('viewings.tmdb_id', 'movies.tmdb_id'))
             // Mit FSK-Grenze fallen Filme ohne bekannte Freigabe heraus (sicherer für die Familie).
             ->when($maxFsk !== null, fn (Builder $query) => $query->where('movies.fsk', '<=', $maxFsk))

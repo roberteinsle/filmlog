@@ -65,6 +65,30 @@
     </section>
 
     <section class="mt-10 max-w-2xl">
+        <h2 class="mb-1 text-lg font-semibold tracking-tight">Streaming-Abos</h2>
+        <p class="mb-4 text-sm text-stone-400">Welche Abos du hast. Die Filmseite und „Heute Abend“ zeigen dann, ob ein Film in deinen Abos läuft.</p>
+
+        @if ($this->streamingProviders['error'])
+            <p class="mb-3 text-sm text-amber-300">{{ $this->streamingProviders['error'] }}</p>
+        @endif
+
+        <div class="flex flex-wrap gap-2">
+            @foreach ($this->streamingProviders['providers'] as $provider)
+                @php($isSubscribed = in_array($provider['id'], $subscribedProviderIds, true))
+                <button type="button" wire:key="provider-{{ $provider['id'] }}" wire:click="toggleSubscription({{ $provider['id'] }})" aria-pressed="{{ $isSubscribed ? 'true' : 'false' }}"
+                        @class([
+                            'inline-flex items-center gap-2 rounded-full border py-1 pr-3 pl-1 text-sm transition',
+                            'border-amber-400 bg-amber-400/15 text-amber-200' => $isSubscribed,
+                            'border-stone-700 text-stone-300 hover:border-stone-500' => ! $isSubscribed,
+                        ])>
+                    <x-provider-logo :path="$provider['logo_path']" class="size-6 rounded-full" />
+                    {{ $provider['name'] }}
+                </button>
+            @endforeach
+        </div>
+    </section>
+
+    <section class="mt-10 max-w-2xl">
         <h2 class="mb-1 text-lg font-semibold tracking-tight">Plex</h2>
         <p class="mb-4 text-sm text-stone-400">Zu Ende geschaute Filme landen automatisch im Tagebuch; nachts gleicht Filmlog ab, welche Filme auf Plex liegen.</p>
 

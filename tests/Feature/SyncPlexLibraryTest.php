@@ -56,7 +56,7 @@ test('the Plex library sets on_plex and adds unknown movies', function () {
 test('Plex movies become suggestions for tonight', function () {
     app()->call([new SyncPlexLibrary, 'handle']);
 
-    expect(app(SuggestForTonight::class)->handle(count: 10)['candidates'])->toBe(3);
+    expect(app(SuggestForTonight::class)->handle(count: 10, source: SuggestForTonight::SOURCE_PLEX)['candidates'])->toBe(3);
 });
 
 test('the settings show the Plex status and start a sync', function () {

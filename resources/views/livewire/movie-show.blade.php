@@ -110,18 +110,37 @@
                 @endif
 
                 <div class="space-y-2 text-sm">
-                    @if ($movie?->on_plex)
-                        <p class="font-medium text-amber-300">Auf Plex vorhanden</p>
+                    @php($yourProviders = collect($details->streamingProviders)->whereIn('id', $subscribedProviderIds)->values())
+                    @if ($yourProviders->isNotEmpty() || $movie?->on_plex || $subscribedProviderIds !== [])
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-stone-400">Für dich</span>
+                            @foreach ($yourProviders as $provider)
+                                <span class="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/15 py-1 pr-2.5 pl-1 text-emerald-200">
+                                    <x-provider-logo :path="$provider['logo_path']" />
+                                    {{ $provider['name'] }} <span class="text-xs text-emerald-300/70">im Abo</span>
+                                </span>
+                            @endforeach
+                            @if ($movie?->on_plex)
+                                <span class="inline-flex items-center gap-1.5 rounded-md bg-amber-400/15 py-1 pr-2.5 pl-1 font-medium text-amber-200">
+                                    <x-plex-icon />
+                                    Auf Plex vorhanden
+                                </span>
+                            @endif
+                            @if ($yourProviders->isEmpty() && ! $movie?->on_plex)
+                                <span class="text-stone-500">nicht in deinen Abos und nicht auf Plex</span>
+                            @endif
+                        </div>
                     @endif
 
                     @if ($details->streamingProviders !== [])
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="text-stone-400">Streamt bei</span>
                             @foreach ($details->streamingProviders as $provider)
-                                <span class="inline-flex items-center gap-1.5 rounded-md bg-stone-800 py-1 pr-2.5 pl-1">
-                                    @if ($provider['logo_path'])
-                                        <img src="{{ rtrim(config('services.tmdb.image_base_url'), '/').'/w45'.$provider['logo_path'] }}" alt="" class="size-5 rounded" loading="lazy" onerror="this.remove()">
-                                    @endif
+                                <span @class([
+                                    'inline-flex items-center gap-1.5 rounded-md bg-stone-800 py-1 pr-2.5 pl-1',
+                                    'ring-1 ring-emerald-500/60' => in_array($provider['id'], $subscribedProviderIds, true),
+                                ])>
+                                    <x-provider-logo :path="$provider['logo_path']" />
                                     {{ $provider['name'] }}
                                 </span>
                             @endforeach

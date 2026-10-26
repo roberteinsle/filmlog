@@ -24,28 +24,28 @@ function suggestedTitles(array $arguments = []): array
     return app(SuggestForTonight::class)->handle(...$arguments)['suggestions']->pluck('title')->all();
 }
 
-test('candidates come from the watchlist and the Plex library, never already seen', function () {
+test('by default candidates come only from the watchlist, never already seen', function () {
     watchlistMovie(['title' => 'Watchlist']);
     Movie::factory()->create(['title' => 'Plex', 'on_plex' => true]);
     Movie::factory()->create(['title' => 'Nur im Cache']);
     $seen = watchlistMovie(['title' => 'Schon gesehen']);
     Viewing::factory()->for($seen)->create();
 
-    expect(suggestedTitles())->toEqualCanonicalizing(['Watchlist', 'Plex']);
+    expect(suggestedTitles())->toBe(['Watchlist']);
 });
 
-test('the watchlist rank comes first, then the TMDB rating', function () {
-    watchlistMovie(['title' => 'Rang 1', 'vote_average' => 5.0]);
-    watchlistMovie(['title' => 'Rang 2', 'vote_average' => 9.0]);
+test('the Plex source suggests unseen Plex movies, watchlist ones on Plex first', function () {
+    watchlistMovie(['title' => 'Nur Watchlist']);
+    watchlistMovie(['title' => 'Watchlist und Plex', 'on_plex' => true, 'vote_average' => 5.0]);
     Movie::factory()->create(['title' => 'Plex gut', 'on_plex' => true, 'vote_average' => 8.5]);
     Movie::factory()->create(['title' => 'Plex mäßig', 'on_plex' => true, 'vote_average' => 6.0]);
+    Viewing::factory()->for(Movie::factory()->create(['title' => 'Plex gesehen', 'on_plex' => true]))->create();
 
-    $result = app(SuggestForTonight::class)->handle(count: 10);
+    $result = app(SuggestForTonight::class)->handle(count: 10, source: SuggestForTonight::SOURCE_PLEX);
 
-    // Ohne Zufall (JITTER) wäre das die Reihenfolge; mit Zufall rutscht ein Film höchstens wenige Plätze.
-    expect($result['candidates'])->toBe(4)
-        ->and($result['suggestions'])->toHaveCount(4)
-        ->and($result['suggestions']->firstWhere('title', 'Rang 1')->watchlist_rank)->toBe(1)
+    expect($result['candidates'])->toBe(3)
+        ->and($result['suggestions']->pluck('title')->all())->toEqualCanonicalizing(['Watchlist und Plex', 'Plex gut', 'Plex mäßig'])
+        ->and($result['suggestions']->firstWhere('title', 'Watchlist und Plex')->watchlist_rank)->toBe(2)
         ->and($result['suggestions']->firstWhere('title', 'Plex gut')->watchlist_rank)->toBeNull();
 });
 

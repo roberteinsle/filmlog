@@ -20,6 +20,8 @@ class TmdbClient
 
     private const int MOVIE_CACHE_SECONDS = 21_600;
 
+    private const int PROVIDER_LIST_CACHE_SECONDS = 86_400;
+
     public function __construct(
         private ?string $token,
         private string $baseUrl,
@@ -65,6 +67,28 @@ class TmdbClient
 
                 return $response->json();
             },
+        );
+    }
+
+    /**
+     * Streaming-Anbieter für Filme in der Region, nach ihrer Bedeutung dort sortiert.
+     *
+     * @return list<array{id: int, name: string, logo_path: ?string}>
+     */
+    public function watchProviders(): array
+    {
+        return Cache::remember(
+            "tmdb:watch-providers:{$this->region}:{$this->language}",
+            self::PROVIDER_LIST_CACHE_SECONDS,
+            fn (): array => collect($this->get('watch/providers/movie', ['watch_region' => $this->region, 'language' => $this->language])->json('results') ?? [])
+                ->sortBy(fn (array $provider): int => (int) ($provider['display_priorities'][$this->region] ?? $provider['display_priority'] ?? PHP_INT_MAX))
+                ->map(fn (array $provider): array => [
+                    'id' => (int) $provider['provider_id'],
+                    'name' => (string) $provider['provider_name'],
+                    'logo_path' => $provider['logo_path'] ?? null,
+                ])
+                ->values()
+                ->all(),
         );
     }
 

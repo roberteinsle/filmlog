@@ -22,6 +22,8 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    // Die Einstellungen laden die Anbieterliste von TMDB; nie echt anfragen.
+    ->beforeEach(fn () => Http::fake(['api.themoviedb.org/3/watch/providers/movie*' => Http::response(tmdbFixture('watch-providers'))]))
     ->in('Feature');
 
 /*

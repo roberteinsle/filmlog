@@ -8,6 +8,23 @@
 
     <div class="space-y-5">
         <fieldset>
+            <legend class="mb-2 text-sm font-medium text-stone-400">Woher?</legend>
+            <div class="inline-flex rounded-full border border-stone-700 p-0.5" role="radiogroup">
+                @foreach (['watchlist' => 'Watchlist', 'plex' => 'Plex-Bibliothek'] as $sourceKey => $sourceLabel)
+                    <button type="button" role="radio" aria-checked="{{ $source === $sourceKey ? 'true' : 'false' }}" wire:click="chooseSource('{{ $sourceKey }}')"
+                            @class([
+                                'inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm transition',
+                                'bg-amber-400 font-medium text-stone-950' => $source === $sourceKey,
+                                'text-stone-300 hover:text-stone-100' => $source !== $sourceKey,
+                            ])>
+                        @if ($sourceKey === 'plex')<x-plex-icon class="size-4" />@endif
+                        {{ $sourceLabel }}
+                    </button>
+                @endforeach
+            </div>
+        </fieldset>
+
+        <fieldset>
             <legend class="mb-2 text-sm font-medium text-stone-400">Mit wem?</legend>
             <div class="flex flex-wrap gap-2">
                 <x-choice-chip wire:click="chooseAlone" :active="$selectedIds === []">Allein</x-choice-chip>
@@ -58,8 +75,12 @@
 
         @if ($result['suggestions']->isEmpty())
             <x-placeholder>
-                Kein ungesehener Film passt dazu. Lockere die Auswahl oder füll deine
-                <a href="{{ route('lists') }}" wire:navigate class="text-amber-300 underline-offset-2 hover:underline">Watchlist</a>.
+                Kein ungesehener Film passt dazu.
+                @if ($source === 'plex')
+                    Lockere die Auswahl oder gleich deine Plex-Bibliothek in den <a href="{{ route('settings') }}" wire:navigate class="text-amber-300 underline-offset-2 hover:underline">Einstellungen</a> ab.
+                @else
+                    Lockere die Auswahl, füll deine <a href="{{ route('lists') }}" wire:navigate class="text-amber-300 underline-offset-2 hover:underline">Watchlist</a> oder schalte auf Plex-Bibliothek um.
+                @endif
             </x-placeholder>
         @else
             <ul class="grid gap-4 sm:grid-cols-3" wire:loading.class="opacity-60">
@@ -78,12 +99,21 @@
                                     $movie->vote_average !== null && $movie->vote_count > 0 ? 'TMDB '.number_format($movie->vote_average, 1, ',', '') : null,
                                 ])->filter(fn ($part) => $part !== null)->join(' · ') }}
                             </p>
-                            <p class="mt-1 text-xs">
+                            <p class="mt-1 flex flex-wrap gap-1 text-xs">
                                 @if ($movie->watchlist_rank !== null)
-                                    <span class="rounded bg-amber-400/15 px-1.5 py-0.5 text-amber-200">Watchlist</span>
+                                    <span class="rounded bg-stone-800 px-1.5 py-0.5 text-stone-300">Watchlist</span>
                                 @endif
+                                @foreach ($this->subscriptionsByMovie[$movie->tmdb_id] ?? [] as $provider)
+                                    <span class="inline-flex items-center gap-1 rounded bg-emerald-500/15 py-0.5 pr-1.5 pl-0.5 text-emerald-200">
+                                        <x-provider-logo :path="$provider['logo_path']" class="size-4" />
+                                        {{ $provider['name'] }}
+                                    </span>
+                                @endforeach
                                 @if ($movie->on_plex)
-                                    <span class="rounded bg-stone-800 px-1.5 py-0.5 text-stone-300">Auf Plex</span>
+                                    <span class="inline-flex items-center gap-1 rounded bg-amber-400/15 py-0.5 pr-1.5 pl-0.5 text-amber-200">
+                                        <x-plex-icon class="size-4" />
+                                        Plex
+                                    </span>
                                 @endif
                             </p>
                             <div class="mt-auto pt-3">

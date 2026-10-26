@@ -6,7 +6,10 @@ use App\Jobs\SyncPlexLibrary;
 use App\Models\Companion;
 use App\Models\Movie;
 use App\Models\PlexAccount;
+use App\Models\StreamingSubscription;
 use App\Services\Plex\PlexClient;
+use App\Services\Tmdb\TmdbClient;
+use App\Services\Tmdb\TmdbException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -25,6 +28,11 @@ class Settings extends Component
     public string $name = '';
 
     public string $maxFsk = '';
+
+    /**
+     * So viele der in Deutschland wichtigsten Anbieter stehen zur Auswahl.
+     */
+    private const int OFFERED_PROVIDERS = 24;
 
     public bool $plexSyncQueued = false;
 
@@ -130,6 +138,46 @@ class Settings extends Component
     }
 
     /**
+     * Anbieter zur Auswahl: deine Abos zuerst, dann die in Deutschland wichtigsten.
+     *
+     * @return array{providers: list<array{id: int, name: string, logo_path: ?string}>, error: ?string}
+     */
+    #[Computed]
+    public function streamingProviders(): array
+    {
+        $subscriptions = StreamingSubscription::query()->orderBy('name')->get()
+            ->map(fn (StreamingSubscription $subscription): array => ['id' => $subscription->provider_id, 'name' => $subscription->name, 'logo_path' => $subscription->logo_path]);
+
+        try {
+            $popular = collect(app(TmdbClient::class)->watchProviders())->take(self::OFFERED_PROVIDERS);
+            $error = null;
+        } catch (TmdbException $exception) {
+            report($exception);
+            $popular = collect();
+            $error = 'Die Anbieterliste von TMDB ist gerade nicht erreichbar.';
+        }
+
+        return ['providers' => $subscriptions->concat($popular)->unique('id')->values()->all(), 'error' => $error];
+    }
+
+    public function toggleSubscription(int $providerId): void
+    {
+        $subscription = StreamingSubscription::find($providerId);
+
+        if ($subscription !== null) {
+            $subscription->delete();
+        } else {
+            $provider = collect(app(TmdbClient::class)->watchProviders())->firstWhere('id', $providerId);
+
+            if ($provider !== null) {
+                StreamingSubscription::create(['provider_id' => $provider['id'], 'name' => $provider['name'], 'logo_path' => $provider['logo_path']]);
+            }
+        }
+
+        unset($this->streamingProviders);
+    }
+
+    /**
      * Plex-Bibliothek sofort abgleichen statt erst in der Nacht.
      */
     public function syncPlex(PlexClient $plex): void
@@ -159,6 +207,7 @@ class Settings extends Component
             'plexWebhookUrl' => $webhookSecret !== '' ? route('webhooks.plex', $webhookSecret) : null,
             'plexLastSync' => Cache::get(SyncPlexLibrary::LAST_SYNC_CACHE_KEY),
             'plexMovies' => Movie::query()->where('on_plex', true)->count(),
+            'subscribedProviderIds' => StreamingSubscription::providerIds(),
             'plexAccounts' => PlexAccount::query()->orderByDesc('counts_viewings')->orderBy('title')->get(),
         ]);
     }

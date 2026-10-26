@@ -8,7 +8,11 @@ use App\Livewire\Forms\ViewingForm;
 use App\Models\Companion;
 use App\Models\Movie;
 use App\Models\MovieList;
+use App\Models\StreamingSubscription;
 use App\Services\MovieStatusResolver;
+use App\Services\Tmdb\MovieDetails;
+use App\Services\Tmdb\TmdbClient;
+use App\Services\Tmdb\TmdbException;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
@@ -33,6 +37,9 @@ class Tonight extends Component
     /** @var list<int|string> */
     #[Url(as: 'mit')]
     public array $companionIds = [];
+
+    #[Url(as: 'quelle', except: SuggestForTonight::SOURCE_WATCHLIST)]
+    public string $source = SuggestForTonight::SOURCE_WATCHLIST;
 
     #[Url(as: 'zeit', except: '')]
     public string $time = '';
@@ -106,7 +113,35 @@ class Tonight extends Component
             genreIds: config("filmlog.moods.{$this->mood}.genres", []),
             excludedTmdbIds: $this->shownTmdbIds,
             seed: $this->seed,
+            source: $this->source === SuggestForTonight::SOURCE_PLEX ? SuggestForTonight::SOURCE_PLEX : SuggestForTonight::SOURCE_WATCHLIST,
         );
+    }
+
+    /**
+     * Deine Abos, in denen die Vorschläge laufen (TMDB, kurz gecacht); ohne Abos keine Abfrage.
+     *
+     * @return array<int, list<array{id: int, name: string, logo_path: ?string}>>
+     */
+    #[Computed]
+    public function subscriptionsByMovie(): array
+    {
+        $subscribedProviderIds = StreamingSubscription::providerIds();
+
+        if ($subscribedProviderIds === []) {
+            return [];
+        }
+
+        $tmdb = app(TmdbClient::class);
+
+        return $this->result['suggestions']->mapWithKeys(function (Movie $movie) use ($tmdb, $subscribedProviderIds): array {
+            try {
+                $providers = MovieDetails::fromTmdb($tmdb->movie($movie->tmdb_id), $tmdb->region())->streamingProviders;
+            } catch (TmdbException) {
+                $providers = [];
+            }
+
+            return [$movie->tmdb_id => array_values(array_filter($providers, fn (array $provider): bool => in_array($provider['id'], $subscribedProviderIds, true)))];
+        })->all();
     }
 
     public function chooseAlone(): void
@@ -123,6 +158,12 @@ class Tonight extends Component
             ? array_values(array_diff($ids, [$companionId]))
             : [...$ids, $companionId];
 
+        $this->criteriaChanged();
+    }
+
+    public function chooseSource(string $source): void
+    {
+        $this->source = $source === SuggestForTonight::SOURCE_PLEX ? SuggestForTonight::SOURCE_PLEX : SuggestForTonight::SOURCE_WATCHLIST;
         $this->criteriaChanged();
     }
 
@@ -146,12 +187,12 @@ class Tonight extends Component
         $this->shownTmdbIds = array_values(array_unique([...$this->shownTmdbIds, ...$this->result['suggestions']->pluck('tmdb_id')->all()]));
         $this->seed++;
         $this->notice = null;
-        unset($this->result);
+        unset($this->result, $this->subscriptionsByMovie);
 
         if ($this->result['remaining'] === 0) {
             $this->shownTmdbIds = [];
             $this->notice = 'Das waren alle passenden Filme – es geht wieder von vorn los.';
-            unset($this->result);
+            unset($this->result, $this->subscriptionsByMovie);
         }
     }
 
@@ -217,6 +258,6 @@ class Tonight extends Component
     {
         $this->shownTmdbIds = [];
         $this->notice = null;
-        unset($this->selectedCompanions, $this->maxFsk, $this->result);
+        unset($this->selectedCompanions, $this->maxFsk, $this->result, $this->subscriptionsByMovie);
     }
 }

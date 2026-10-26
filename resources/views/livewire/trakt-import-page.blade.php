@@ -9,6 +9,11 @@
         'movies_unresolved' => 'Filme nicht zuordenbar',
         'skipped_non_movies' => 'Serien/Episoden übersprungen',
     ];
+    // Nur anzeigen, wenn etwas passiert ist (Aufräumen nach früheren Importen).
+    $optionalStatLabels = [
+        'lists_renamed' => 'Listen umbenannt',
+        'lists_removed' => 'leere Listen entfernt',
+    ];
 @endphp
 
 <div @if ($this->isRunning) wire:poll.2s @endif>
@@ -86,7 +91,7 @@
 
                             @if ($import->status === \App\Models\TraktImport::DONE)
                                 <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3">
-                                    @foreach ($statLabels as $statKey => $label)
+                                    @foreach ($statLabels + array_filter($optionalStatLabels, fn (string $statKey): bool => ($import->stats[$statKey] ?? 0) > 0, ARRAY_FILTER_USE_KEY) as $statKey => $label)
                                         <div class="flex items-baseline gap-2">
                                             <dt class="sr-only">{{ $label }}</dt>
                                             <dd class="font-semibold text-stone-100 tabular-nums">{{ $import->stats[$statKey] ?? 0 }}</dd>

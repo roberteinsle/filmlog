@@ -13,6 +13,7 @@ use ZipArchive;
  * @phpstan-type HistoryEntry array{id: string, watched_at: string, movie: MovieRef}
  * @phpstan-type RatingEntry array{rating: int, rated_at: ?string, movie: MovieRef}
  * @phpstan-type ListEntry array{rank: int, listed_at: ?string, movie: MovieRef}
+ * @phpstan-type TraktList array{name: string, legacy_name: string, is_listed: bool, is_skipped: bool, items: list<ListEntry>}
  */
 class TraktExport
 {
@@ -25,6 +26,21 @@ class TraktExport
      * Dateien, die Trakt mitliefert, für Filmlog aber keine Rolle spielen.
      */
     private const string IGNORED_PATTERN = '/^(_|(watched|collection|ratings|comments|likes|user|network|followers|following|friends|recommendations|hidden|playback|stats|settings|profile|notes)[-.])/';
+
+    /**
+     * Listen-Dateien, die Trakt selbst anlegt, mit deutschem Namen.
+     */
+    private const array SPECIAL_LIST_NAMES = ['favorites' => 'Favoriten'];
+
+    /**
+     * Listen-Dateien, die keine eigenen Filmlisten enthalten (collaborations = Listen anderer Nutzer).
+     */
+    private const array FOREIGN_LIST_FILES = ['lists-collaborations.json', 'lists-liked.json', 'lists-likes.json'];
+
+    /**
+     * Längster übernommener Listenname.
+     */
+    private const int MAX_LIST_NAME_LENGTH = 100;
 
     /**
      * Höchstzahl der Meldungen aus _errors.json im Bericht.
@@ -40,7 +56,7 @@ class TraktExport
     /** @var list<ListEntry> */
     private array $watchlist = [];
 
-    /** @var array<string, array{name: string, items: list<ListEntry>}> */
+    /** @var array<string, TraktList> */
     private array $lists = [];
 
     /** @var list<string> */
@@ -99,9 +115,11 @@ class TraktExport
     }
 
     /**
-     * Eigene Listen (nach Slug), Filme nach Trakt-Rang.
+     * Eigene Listen (nach Dateiname ohne „lists-“), Filme nach Trakt-Rang.
+     * legacy_name ist der Name, den frühere Importe aus dem Dateinamen gebildet haben;
+     * is_listed sagt, ob die Liste in lists-lists.json steht, is_skipped markiert Dateien, die keine eigene Liste sind.
      *
-     * @return array<string, array{name: string, items: list<ListEntry>}>
+     * @return array<string, TraktList>
      */
     public function lists(): array
     {
@@ -213,7 +231,7 @@ class TraktExport
                 'ratings' => $this->readRatings($data),
                 'watchlist' => $this->readWatchlist($data),
                 'list-names' => count($listNames = $this->readListNames($data)),
-                'list' => count($listFiles[Str::after(Str::beforeLast($name, '.json'), 'lists-')] = $this->listEntries($data)),
+                'list' => count($listFiles[Str::after(Str::beforeLast($name, '.json'), 'lists-')] = $this->isOwnListFile($name) ? $this->listEntries($data) : []),
             };
 
             $this->readFiles[] = "{$name} ({$movieEntries})";
@@ -223,9 +241,20 @@ class TraktExport
 
         usort($this->watchlist, fn (array $a, array $b): int => $a['rank'] <=> $b['rank']);
 
-        foreach ($listFiles as $slug => $items) {
+        foreach ($listFiles as $fileSlug => $items) {
             usort($items, fn (array $a, array $b): int => $a['rank'] <=> $b['rank']);
-            $this->lists[$slug] = ['name' => $listNames[$slug] ?? Str::headline($slug), 'items' => $items];
+
+            // Neuere Exporte: lists-list-{Trakt-ID}-{slug}.json, ältere: lists-{slug}.json
+            [$traktId, $slug] = preg_match('/^list-(\d+)-(.+)$/', $fileSlug, $match) ? [$match[1], $match[2]] : [null, $fileSlug];
+            $listedName = ($traktId !== null ? $listNames["trakt:{$traktId}"] ?? null : null) ?? $listNames[$slug] ?? null;
+
+            $this->lists[$fileSlug] = [
+                'name' => $listedName ?? self::SPECIAL_LIST_NAMES[$fileSlug] ?? Str::headline($slug),
+                'legacy_name' => Str::headline($fileSlug),
+                'is_listed' => $listedName !== null,
+                'is_skipped' => ! $this->isOwnListFile("lists-{$fileSlug}.json"),
+                'items' => $items,
+            ];
         }
     }
 
@@ -281,6 +310,11 @@ class TraktExport
         return count($entries);
     }
 
+    private function isOwnListFile(string $name): bool
+    {
+        return ! in_array($name, self::FOREIGN_LIST_FILES, true);
+    }
+
     private function readExportErrors(mixed $data): void
     {
         foreach (is_array($data) ? $data : [$data] as $key => $error) {
@@ -316,17 +350,25 @@ class TraktExport
 
     /**
      * @param  list<mixed>  $data
-     * @return array<string, string> Slug → Name
+     * @return array<string, string> „trakt:{ID}“ bzw. Slug → Name
      */
     private function readListNames(array $data): array
     {
         $names = [];
 
         foreach ($data as $list) {
-            $slug = $list['ids']['slug'] ?? null;
+            if (! is_array($list) || ! is_string($list['name'] ?? null) || trim($list['name']) === '') {
+                continue;
+            }
 
-            if (is_string($slug) && is_string($list['name'] ?? null) && trim($list['name']) !== '') {
-                $names[strtolower($slug)] = Str::limit(trim($list['name']), 50, '');
+            $name = Str::limit(trim($list['name']), self::MAX_LIST_NAME_LENGTH, '');
+
+            if (is_numeric($list['ids']['trakt'] ?? null)) {
+                $names['trakt:'.$list['ids']['trakt']] = $name;
+            }
+
+            if (is_string($list['ids']['slug'] ?? null)) {
+                $names[strtolower($list['ids']['slug'])] = $name;
             }
         }
 

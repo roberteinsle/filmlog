@@ -191,3 +191,58 @@ test('a large export is processed in stages and keeps its progress', function ()
         ->and($import->refresh()->status)->toBe(TraktImport::DONE)
         ->and($import->progress())->toBe(100);
 });
+
+/**
+ * Listen im Format neuerer Trakt-Exporte.
+ *
+ * @return array<string, mixed>
+ */
+function traktExportWithLists(): array
+{
+    return [
+        'lists-lists.json' => [
+            ['name' => 'Deutsche Kino-Charts 2022', 'ids' => ['trakt' => 25150071, 'slug' => 'deutsche-kino-charts-2022']],
+            ['name' => 'Jasmin', 'ids' => ['trakt' => 32133025, 'slug' => 'jasmin']],
+        ],
+        'lists-list-25150071-deutsche-kino-charts-2022.json' => [
+            ['rank' => 2, 'type' => 'movie', 'movie' => traktMovie('Alien', 1979, ['tmdb' => 348])],
+            ['rank' => 1, 'type' => 'movie', 'movie' => traktMovie('Heat', 1995, ['tmdb' => 949])],
+        ],
+        'lists-list-32133025-jasmin.json' => [],
+        'lists-favorites.json' => [],
+        'lists-collaborations.json' => [],
+    ];
+}
+
+test('lists get their Trakt names, empty Trakt lists are kept, special files create no lists', function () {
+    $import = runTraktImport(traktExportWithLists());
+
+    $charts = MovieList::firstWhere('name', 'Deutsche Kino-Charts 2022');
+
+    expect(MovieList::query()->where('is_watchlist', false)->orderBy('sort')->pluck('name')->all())->toBe(['Deutsche Kino-Charts 2022', 'Jasmin'])
+        ->and($charts->movies()->pluck('movies.tmdb_id')->all())->toBe([949, 348])
+        ->and($import->stats)->toMatchArray(['lists_created' => 2, 'list_items_added' => 2, 'lists_renamed' => 0, 'lists_removed' => 0]);
+});
+
+test('lists named after the file by an earlier import are renamed, empty leftovers removed', function () {
+    $legacy = MovieList::factory()->create(['name' => 'List 25150071 Deutsche Kino Charts 2022']);
+    $legacy->addMovie(949);
+    MovieList::factory()->create(['name' => 'Favorites']);
+    MovieList::factory()->create(['name' => 'Collaborations']);
+    MovieList::factory()->create(['name' => 'List 32133025 Jasmin']);
+
+    $import = runTraktImport(traktExportWithLists());
+
+    expect(MovieList::query()->where('is_watchlist', false)->orderBy('id')->pluck('name')->all())->toBe(['Deutsche Kino-Charts 2022', 'Jasmin'])
+        ->and($legacy->refresh()->name)->toBe('Deutsche Kino-Charts 2022')
+        ->and($legacy->movies()->pluck('movies.tmdb_id')->all())->toBe([949, 348])
+        ->and($import->stats)->toMatchArray(['lists_created' => 0, 'lists_renamed' => 2, 'lists_removed' => 2, 'list_items_added' => 1]);
+});
+
+test('leftover lists with movies are never removed', function () {
+    MovieList::factory()->create(['name' => 'Favorites'])->addMovie(949);
+
+    runTraktImport(traktExportWithLists());
+
+    expect(MovieList::firstWhere('name', 'Favorites')->movies()->count())->toBe(1);
+});

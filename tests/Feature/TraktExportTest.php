@@ -123,3 +123,27 @@ test('a file that is not a ZIP is rejected', function () {
 
     TraktExport::open(Storage::disk('local')->path('imports/kaputt.zip'));
 })->throws(InvalidTraktExportException::class, 'Die Datei ist kein lesbares ZIP-Archiv.');
+
+test('list names are matched by Trakt id in newer exports', function () {
+    $export = openTraktExport([
+        'lists-lists.json' => [
+            ['name' => 'Deutsche Kino-Charts 2022 (German Top Box Office 2022)', 'ids' => ['trakt' => 25150071, 'slug' => 'deutsche-kino-charts-2022-german-top-box-office-2022']],
+            ['name' => 'Jasmin', 'ids' => ['trakt' => 32133025, 'slug' => 'jasmin']],
+        ],
+        'lists-list-25150071-deutsche-kino-charts-2022-german-top-box-office-2022.json' => [['rank' => 1, 'type' => 'movie', 'movie' => traktMovie('A', 2022, ['tmdb' => 1])]],
+        'lists-list-32133025-jasmin.json' => [],
+        'lists-favorites.json' => [],
+        'lists-collaborations.json' => [['type' => 'list', 'list' => ['name' => 'Fremde Liste']]],
+    ]);
+
+    expect($export->lists()['list-25150071-deutsche-kino-charts-2022-german-top-box-office-2022'])->toMatchArray([
+        'name' => 'Deutsche Kino-Charts 2022 (German Top Box Office 2022)',
+        'legacy_name' => 'List 25150071 Deutsche Kino Charts 2022 German Top Box Office 2022',
+        'is_listed' => true,
+        'is_skipped' => false,
+    ])
+        ->and($export->lists()['list-32133025-jasmin'])->toMatchArray(['name' => 'Jasmin', 'is_listed' => true, 'items' => []])
+        ->and($export->lists()['favorites'])->toMatchArray(['name' => 'Favoriten', 'legacy_name' => 'Favorites', 'is_listed' => false])
+        ->and($export->lists()['collaborations'])->toMatchArray(['is_skipped' => true, 'items' => []])
+        ->and($export->skippedNonMovies())->toBe(0);
+});

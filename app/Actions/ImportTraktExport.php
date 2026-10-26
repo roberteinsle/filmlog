@@ -183,6 +183,8 @@ class ImportTraktExport
                 'watchlist_added' => 0,
                 'lists_created' => 0,
                 'list_items_added' => 0,
+                'lists_renamed' => 0,
+                'lists_removed' => 0,
             ];
 
             foreach ($export->history() as $entry) {
@@ -213,23 +215,7 @@ class ImportTraktExport
             }
 
             foreach ($export->lists() as $list) {
-                $movieList = MovieList::query()->where('is_watchlist', false)->firstWhere('name', $list['name']);
-
-                if ($movieList === null) {
-                    $movieList = MovieList::create([
-                        'name' => $list['name'],
-                        'is_watchlist' => false,
-                        'sort' => (int) MovieList::query()->max('sort') + 1,
-                    ]);
-                    $stats['lists_created']++;
-                }
-
-                foreach ($list['items'] as $entry) {
-                    if (($tmdbId = $tmdbIdOf($entry)) !== null && ! $movieList->contains($tmdbId)) {
-                        $movieList->addMovie($tmdbId);
-                        $stats['list_items_added']++;
-                    }
-                }
+                $this->importList($list, $tmdbIdOf, $stats);
             }
 
             return $stats;
@@ -245,6 +231,55 @@ class ImportTraktExport
             'finished_at' => now(),
             'error' => null,
         ])->save();
+    }
+
+    /**
+     * Legt eine Trakt-Liste an oder ergänzt sie. Frühere Importe haben Listen nach dem Dateinamen benannt
+     * („List 25150071 Deutsche Kino Charts …“); solche Listen werden umbenannt statt doppelt angelegt.
+     * Leere Listen entstehen nur, wenn es sie in Trakt wirklich gibt.
+     *
+     * @param  array{name: string, legacy_name: string, is_listed: bool, is_skipped: bool, items: list<array{rank: int, listed_at: ?string, movie: array<string, mixed>}>}  $list
+     * @param  callable(array<string, mixed>): ?int  $tmdbIdOf
+     * @param  array<string, int>  $stats
+     */
+    private function importList(array $list, callable $tmdbIdOf, array &$stats): void
+    {
+        $ownLists = MovieList::query()->where('is_watchlist', false);
+        $legacyList = (clone $ownLists)->firstWhere('name', $list['legacy_name']);
+        $tmdbIds = array_values(array_unique(array_filter(array_map($tmdbIdOf, $list['items']))));
+
+        if ($list['is_skipped'] || ($tmdbIds === [] && ! $list['is_listed'])) {
+            if ($legacyList !== null && $legacyList->movies()->doesntExist()) {
+                $legacyList->delete();
+                $stats['lists_removed']++;
+            }
+
+            return;
+        }
+
+        $movieList = (clone $ownLists)->firstWhere('name', $list['name']);
+
+        if ($movieList === null && $legacyList !== null) {
+            $legacyList->update(['name' => $list['name']]);
+            $movieList = $legacyList;
+            $stats['lists_renamed']++;
+        }
+
+        if ($movieList === null) {
+            $movieList = MovieList::create([
+                'name' => $list['name'],
+                'is_watchlist' => false,
+                'sort' => (int) MovieList::query()->max('sort') + 1,
+            ]);
+            $stats['lists_created']++;
+        }
+
+        foreach ($tmdbIds as $tmdbId) {
+            if (! $movieList->contains($tmdbId)) {
+                $movieList->addMovie($tmdbId);
+                $stats['list_items_added']++;
+            }
+        }
     }
 
     /**

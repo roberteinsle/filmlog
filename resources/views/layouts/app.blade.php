@@ -3,6 +3,7 @@
         ['route' => 'tonight', 'label' => 'Heute Abend', 'icon' => 'M3 12h18M3 6h18M3 18h12'],
         ['route' => 'search', 'active' => ['search', 'movie'], 'label' => 'Suche', 'icon' => 'M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z'],
         ['route' => 'lists', 'active' => ['lists', 'lists.show'], 'label' => 'Listen', 'icon' => 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01'],
+        ['route' => 'charts', 'label' => 'Kinocharts', 'icon' => 'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3'],
         ['route' => 'diary', 'label' => 'Tagebuch', 'icon' => 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z'],
         ['route' => 'review', 'label' => 'Rückblick', 'icon' => 'M3 3v18h18M7 15l4-4 3 3 5-6'],
     ];
@@ -56,11 +57,11 @@
         </main>
 
         <nav class="fixed inset-x-0 bottom-0 z-20 border-t border-stone-800 bg-stone-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden" aria-label="Hauptnavigation">
-            <div class="grid grid-cols-5">
+            <div class="grid grid-cols-6">
                 @foreach ($navigation as $item)
                     <a href="{{ route($item['route']) }}" wire:navigate
                        @class([
-                           'flex flex-col items-center gap-1 py-2.5 text-[11px]',
+                           'flex flex-col items-center gap-1 py-2.5 text-[10px] whitespace-nowrap',
                            'text-amber-300' => request()->routeIs(...(array) ($item['active'] ?? $item['route'])),
                            'text-stone-500' => ! request()->routeIs(...(array) ($item['active'] ?? $item['route'])),
                        ])>

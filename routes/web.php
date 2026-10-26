@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginLinkController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\PlexWebhookController;
 use App\Livewire\Auth\Login;
+use App\Livewire\CinemaCharts;
 use App\Livewire\Diary;
 use App\Livewire\Lists;
 use App\Livewire\ListShow;
@@ -33,6 +34,7 @@ Route::middleware(['auth', 'login.fresh'])->group(function () {
     Route::livewire('/film/{tmdbId}', MovieShow::class)->whereNumber('tmdbId')->name('movie');
     Route::livewire('/listen', Lists::class)->name('lists');
     Route::livewire('/listen/{list}', ListShow::class)->whereNumber('list')->name('lists.show');
+    Route::livewire('/kinocharts', CinemaCharts::class)->name('charts');
     Route::livewire('/tagebuch', Diary::class)->name('diary');
     Route::livewire('/rueckblick', Review::class)->name('review');
     Route::livewire('/einstellungen', Settings::class)->name('settings');

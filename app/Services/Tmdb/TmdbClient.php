@@ -32,15 +32,16 @@ class TmdbClient
     /**
      * @return array{results: list<array<string, mixed>>, total_results: int, total_pages: int}
      */
-    public function searchMovies(string $query, int $page = 1): array
+    public function searchMovies(string $query, int $page = 1, ?int $year = null): array
     {
-        $params = [
+        $params = array_filter([
             'query' => $query,
             'page' => $page,
             'include_adult' => 'false',
             'language' => $this->language,
             'region' => $this->region,
-        ];
+            'year' => $year,
+        ], fn (mixed $value): bool => $value !== null);
 
         return Cache::remember(
             'tmdb:search:'.hash('sha256', json_encode($params)),

@@ -1,6 +1,9 @@
 <?php
 
+use Illuminate\Support\Facades\Queue;
+
 test('every screen renders for a logged-in user', function (string $routeName, string $heading) {
+    Queue::fake();
     actingAsLoggedInUser();
 
     $this->get(route($routeName))
@@ -10,6 +13,7 @@ test('every screen renders for a logged-in user', function (string $routeName, s
     ['tonight', 'Heute Abend'],
     ['search', 'Suche'],
     ['lists', 'Listen'],
+    ['charts', 'Kinocharts'],
     ['diary', 'Tagebuch'],
     ['review', 'Rückblick'],
     ['settings', 'Einstellungen'],

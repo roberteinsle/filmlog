@@ -24,6 +24,28 @@
             </div>
         </fieldset>
 
+        @if ($source === 'watchlist')
+            <fieldset>
+                <legend class="mb-2 text-sm font-medium text-stone-400">Bei welchem Abo?</legend>
+                @if ($this->subscriptions->isEmpty())
+                    <a href="{{ route('settings') }}" wire:navigate class="text-sm text-stone-500 underline-offset-2 hover:text-stone-300 hover:underline">Streaming-Abos in den Einstellungen wählen</a>
+                @else
+                    <div class="flex flex-wrap gap-2">
+                        <x-choice-chip wire:click="chooseAllProviders" :active="$this->selectedProviderIds === []">egal</x-choice-chip>
+                        @foreach ($this->subscriptions as $subscription)
+                            <x-choice-chip wire:key="provider-{{ $subscription->provider_id }}" wire:click="toggleProvider({{ $subscription->provider_id }})" :active="in_array($subscription->provider_id, $this->selectedProviderIds, true)" class="inline-flex items-center gap-1.5 pl-1.5!">
+                                <x-provider-logo :path="$subscription->logo_path" class="rounded-full" />
+                                {{ $subscription->name }}
+                            </x-choice-chip>
+                        @endforeach
+                    </div>
+                    @if ($this->moviesWithoutProviders > 0)
+                        <p class="mt-2 text-xs text-amber-300">Für {{ $this->moviesWithoutProviders }} Watchlist-{{ $this->moviesWithoutProviders === 1 ? 'Film' : 'Filme' }} werden die Streaming-Infos gerade geladen – gleich neu laden.</p>
+                    @endif
+                @endif
+            </fieldset>
+        @endif
+
         <fieldset>
             <legend class="mb-2 text-sm font-medium text-stone-400">Mit wem?</legend>
             <div class="flex flex-wrap gap-2">
@@ -103,10 +125,10 @@
                                 @if ($movie->watchlist_rank !== null)
                                     <span class="rounded bg-stone-800 px-1.5 py-0.5 text-stone-300">Watchlist</span>
                                 @endif
-                                @foreach ($this->subscriptionsByMovie[$movie->tmdb_id] ?? [] as $provider)
-                                    <span class="inline-flex items-center gap-1 rounded bg-emerald-500/15 py-0.5 pr-1.5 pl-0.5 text-emerald-200">
-                                        <x-provider-logo :path="$provider['logo_path']" class="size-4" />
-                                        {{ $provider['name'] }}
+                                @foreach ($this->subscriptionsByMovie[$movie->tmdb_id] ?? [] as $subscription)
+                                    <span class="inline-flex items-center gap-1 rounded bg-sky-500/15 py-0.5 pr-1.5 pl-0.5 text-sky-200">
+                                        <x-provider-logo :path="$subscription->logo_path" class="size-4" />
+                                        {{ $subscription->name }}
                                     </span>
                                 @endforeach
                                 @if ($movie->on_plex)

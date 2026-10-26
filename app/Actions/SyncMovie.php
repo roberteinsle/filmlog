@@ -25,6 +25,7 @@ class SyncMovie
                 'vote_count' => $details->voteCount,
                 'genre_ids' => $details->genreIds,
                 'directors' => $details->directors,
+                'provider_ids' => array_column($details->streamingProviders, 'id'),
                 'collection_id' => $details->collectionId,
                 'imdb_id' => $details->imdbId,
                 'cached_at' => now(),

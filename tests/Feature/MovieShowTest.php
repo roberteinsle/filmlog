@@ -38,6 +38,7 @@ test('opening a movie stores it in the local cache', function () {
         ->runtime->toBe(136)
         ->fsk->toBe(16)
         ->genre_ids->toBe([28, 878])
+        ->provider_ids->toBe([8, 30])
         ->collection_id->toBe(2344)
         ->cached_at->not->toBeNull();
 });
@@ -45,7 +46,7 @@ test('opening a movie stores it in the local cache', function () {
 test('the banner says never seen for an unknown movie', function () {
     fakeTmdb();
 
-    $this->get(route('movie', 603))->assertSee('🟢')->assertSee('Nie gesehen');
+    $this->get(route('movie', 603))->assertSee('🔴')->assertSee('Nie gesehen');
 });
 
 test('the banner says on watchlist', function () {
@@ -62,7 +63,7 @@ test('the banner shows the last viewing date and rating', function () {
     Viewing::factory()->for($movie)->create(['watched_at' => '2026-10-16 20:15', 'rating' => 8]);
 
     $this->get(route('movie', 603))
-        ->assertSee('🔴')
+        ->assertSee('🟢')
         ->assertSee('Gesehen am 16.10.2026, deine Bewertung: 8')
         ->assertSee('2× gesehen');
 });

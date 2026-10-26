@@ -4,16 +4,15 @@ namespace App\Livewire;
 
 use App\Actions\LogViewing;
 use App\Actions\SuggestForTonight;
+use App\Jobs\RefreshMovie;
 use App\Livewire\Forms\ViewingForm;
 use App\Models\Companion;
 use App\Models\Movie;
 use App\Models\MovieList;
 use App\Models\StreamingSubscription;
 use App\Services\MovieStatusResolver;
-use App\Services\Tmdb\MovieDetails;
-use App\Services\Tmdb\TmdbClient;
-use App\Services\Tmdb\TmdbException;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Collection as SupportCollection;
 use Livewire\Attributes\Computed;
@@ -40,6 +39,10 @@ class Tonight extends Component
 
     #[Url(as: 'quelle', except: SuggestForTonight::SOURCE_WATCHLIST)]
     public string $source = SuggestForTonight::SOURCE_WATCHLIST;
+
+    /** @var list<int|string> */
+    #[Url(as: 'abo')]
+    public array $providerIds = [];
 
     #[Url(as: 'zeit', except: '')]
     public string $time = '';
@@ -114,34 +117,58 @@ class Tonight extends Component
             excludedTmdbIds: $this->shownTmdbIds,
             seed: $this->seed,
             source: $this->source === SuggestForTonight::SOURCE_PLEX ? SuggestForTonight::SOURCE_PLEX : SuggestForTonight::SOURCE_WATCHLIST,
+            providerIds: $this->selectedProviderIds,
         );
     }
 
     /**
-     * Deine Abos, in denen die Vorschläge laufen (TMDB, kurz gecacht); ohne Abos keine Abfrage.
+     * @return Collection<int, StreamingSubscription>
+     */
+    #[Computed]
+    public function subscriptions(): Collection
+    {
+        return StreamingSubscription::query()->orderBy('name')->get();
+    }
+
+    /**
+     * Gewählte Abos für den Filter (nur bei Quelle Watchlist; unbekannte IDs aus der URL fallen weg).
      *
-     * @return array<int, list<array{id: int, name: string, logo_path: ?string}>>
+     * @return list<int>
+     */
+    #[Computed]
+    public function selectedProviderIds(): array
+    {
+        if ($this->source !== SuggestForTonight::SOURCE_WATCHLIST) {
+            return [];
+        }
+
+        return array_values(array_intersect($this->subscriptions->modelKeys(), array_map('intval', $this->providerIds)));
+    }
+
+    /**
+     * Ungesehene Watchlist-Filme, deren Streaming-Anbieter noch nicht von TMDB geholt sind.
+     */
+    #[Computed]
+    public function moviesWithoutProviders(): int
+    {
+        if ($this->selectedProviderIds === []) {
+            return 0;
+        }
+
+        return $this->watchlistMoviesWithoutProviders()->count();
+    }
+
+    /**
+     * Deine Abos, in denen die Vorschläge laufen (aus movies.provider_ids).
+     *
+     * @return array<int, Collection<int, StreamingSubscription>>
      */
     #[Computed]
     public function subscriptionsByMovie(): array
     {
-        $subscribedProviderIds = StreamingSubscription::providerIds();
-
-        if ($subscribedProviderIds === []) {
-            return [];
-        }
-
-        $tmdb = app(TmdbClient::class);
-
-        return $this->result['suggestions']->mapWithKeys(function (Movie $movie) use ($tmdb, $subscribedProviderIds): array {
-            try {
-                $providers = MovieDetails::fromTmdb($tmdb->movie($movie->tmdb_id), $tmdb->region())->streamingProviders;
-            } catch (TmdbException) {
-                $providers = [];
-            }
-
-            return [$movie->tmdb_id => array_values(array_filter($providers, fn (array $provider): bool => in_array($provider['id'], $subscribedProviderIds, true)))];
-        })->all();
+        return $this->result['suggestions']->mapWithKeys(fn (Movie $movie): array => [
+            $movie->tmdb_id => $this->subscriptions->filter(fn (StreamingSubscription $subscription): bool => in_array($subscription->provider_id, $movie->provider_ids ?? [], true))->values(),
+        ])->all();
     }
 
     public function chooseAlone(): void
@@ -164,6 +191,30 @@ class Tonight extends Component
     public function chooseSource(string $source): void
     {
         $this->source = $source === SuggestForTonight::SOURCE_PLEX ? SuggestForTonight::SOURCE_PLEX : SuggestForTonight::SOURCE_WATCHLIST;
+        $this->criteriaChanged();
+    }
+
+    /**
+     * Abo im Filter an-/abwählen; fehlen Anbieter-Infos, werden sie im Hintergrund von TMDB geholt.
+     */
+    public function toggleProvider(int $providerId): void
+    {
+        $ids = array_map('intval', $this->providerIds);
+
+        $this->providerIds = in_array($providerId, $ids, true)
+            ? array_values(array_diff($ids, [$providerId]))
+            : [...$ids, $providerId];
+
+        $this->criteriaChanged();
+
+        if ($this->selectedProviderIds !== []) {
+            $this->watchlistMoviesWithoutProviders()->pluck('movies.tmdb_id')->each(fn (int $tmdbId) => RefreshMovie::dispatch($tmdbId));
+        }
+    }
+
+    public function chooseAllProviders(): void
+    {
+        $this->providerIds = [];
         $this->criteriaChanged();
     }
 
@@ -258,6 +309,18 @@ class Tonight extends Component
     {
         $this->shownTmdbIds = [];
         $this->notice = null;
-        unset($this->selectedCompanions, $this->maxFsk, $this->result, $this->subscriptionsByMovie);
+        unset($this->selectedCompanions, $this->maxFsk, $this->selectedProviderIds, $this->moviesWithoutProviders, $this->result, $this->subscriptionsByMovie);
+    }
+
+    /**
+     * @return Builder<Movie>
+     */
+    private function watchlistMoviesWithoutProviders(): Builder
+    {
+        return Movie::query()
+            ->join('list_items', 'list_items.tmdb_id', '=', 'movies.tmdb_id')
+            ->where('list_items.list_id', MovieList::watchlist()->id)
+            ->whereNull('movies.provider_ids')
+            ->whereNotExists(fn ($query) => $query->selectRaw('1')->from('viewings')->whereColumn('viewings.tmdb_id', 'movies.tmdb_id'));
     }
 }

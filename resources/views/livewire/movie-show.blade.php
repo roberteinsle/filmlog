@@ -3,7 +3,7 @@
         <x-status-banner :status="$status">
             @if ($status->state === \App\Services\WatchState::Seen)
                 <x-slot:details>
-                    <ol class="divide-y divide-red-200/10">
+                    <ol class="divide-y divide-emerald-200/10">
                         @foreach ($this->viewings as $viewing)
                             @php($watchedAt = $viewing->watched_at->timezone(config('app.timezone')))
                             <li wire:key="banner-viewing-{{ $viewing->id }}" class="flex items-start gap-3 py-2">
@@ -15,7 +15,7 @@
                                         @endif
                                         · {{ $viewing->companions->isEmpty() ? 'allein' : 'mit '.$viewing->companions->pluck('name')->join(', ', ' und ') }}
                                         @if ($viewing->source !== 'manual')
-                                            <span class="ml-1 rounded border border-red-200/20 px-1 text-xs opacity-70">{{ ucfirst($viewing->source) }}</span>
+                                            <span class="ml-1 rounded border border-emerald-200/20 px-1 text-xs opacity-70">{{ ucfirst($viewing->source) }}</span>
                                         @endif
                                     </p>
                                     @if ($viewing->note)
@@ -115,9 +115,9 @@
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="text-stone-400">Für dich</span>
                             @foreach ($yourProviders as $provider)
-                                <span class="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/15 py-1 pr-2.5 pl-1 text-emerald-200">
+                                <span class="inline-flex items-center gap-1.5 rounded-md bg-sky-500/15 py-1 pr-2.5 pl-1 text-sky-200">
                                     <x-provider-logo :path="$provider['logo_path']" />
-                                    {{ $provider['name'] }} <span class="text-xs text-emerald-300/70">im Abo</span>
+                                    {{ $provider['name'] }} <span class="text-xs text-sky-300/70">im Abo</span>
                                 </span>
                             @endforeach
                             @if ($movie?->on_plex)
@@ -138,7 +138,7 @@
                             @foreach ($details->streamingProviders as $provider)
                                 <span @class([
                                     'inline-flex items-center gap-1.5 rounded-md bg-stone-800 py-1 pr-2.5 pl-1',
-                                    'ring-1 ring-emerald-500/60' => in_array($provider['id'], $subscribedProviderIds, true),
+                                    'ring-1 ring-sky-500/60' => in_array($provider['id'], $subscribedProviderIds, true),
                                 ])>
                                     <x-provider-logo :path="$provider['logo_path']" />
                                     {{ $provider['name'] }}

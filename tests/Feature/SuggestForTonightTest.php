@@ -96,3 +96,12 @@ test('shown movies can be excluded', function () {
         ->and($result['candidates'])->toBe(2)
         ->and($result['remaining'])->toBe(1);
 });
+
+test('suggestions can be limited to movies streaming at given providers', function () {
+    watchlistMovie(['title' => 'Netflix', 'provider_ids' => [8]]);
+    watchlistMovie(['title' => 'Disney und WOW', 'provider_ids' => [337, 30]]);
+    watchlistMovie(['title' => 'Unbekannt', 'provider_ids' => null]);
+
+    expect(suggestedTitles(['providerIds' => [337]]))->toBe(['Disney und WOW'])
+        ->and(suggestedTitles(['providerIds' => [8, 30]]))->toEqualCanonicalizing(['Netflix', 'Disney und WOW']);
+});

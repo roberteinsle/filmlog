@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Table(key: 'tmdb_id', incrementing: false)]
 #[Fillable([
     'tmdb_id', 'title', 'original_title', 'year', 'runtime', 'fsk', 'poster_path',
-    'vote_average', 'vote_count', 'genre_ids', 'directors', 'collection_id', 'imdb_id', 'cached_at',
+    'vote_average', 'vote_count', 'genre_ids', 'directors', 'provider_ids', 'collection_id', 'imdb_id', 'cached_at',
 ])]
 class Movie extends Model
 {
@@ -37,6 +37,7 @@ class Movie extends Model
             'vote_count' => 'integer',
             'genre_ids' => 'array',
             'directors' => 'array',
+            'provider_ids' => 'array',
             'collection_id' => 'integer',
             'on_plex' => 'boolean',
             'cached_at' => 'datetime',

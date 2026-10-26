@@ -8,19 +8,19 @@
 {{-- Mit dem Slot $details lässt sich die Kachel aufklappen, z. B. für die einzelnen Sichtungen. --}}
 <div x-data="{ open: false }" {{ $attributes->class([
     'rounded-xl border',
-    'border-red-500/40 bg-red-500/10 text-red-100' => $state === \App\Services\WatchState::Seen,
+    'border-emerald-500/40 bg-emerald-500/10 text-emerald-100' => $state === \App\Services\WatchState::Seen,
     'border-amber-400/40 bg-amber-400/10 text-amber-100' => $state === \App\Services\WatchState::OnWatchlist,
-    'border-emerald-500/40 bg-emerald-500/10 text-emerald-100' => $state === \App\Services\WatchState::NeverSeen,
+    'border-red-500/40 bg-red-500/10 text-red-100' => $state === \App\Services\WatchState::NeverSeen,
 ]) }} role="status">
     <{{ $isExpandable ? 'button' : 'div' }}
         @if ($isExpandable) type="button" x-on:click="open = ! open" x-bind:aria-expanded="open" aria-controls="status-details" @endif
         class="flex w-full items-start gap-3 px-4 py-3 text-left">
-        <span class="text-lg leading-6" aria-hidden="true">{{ match ($state) { \App\Services\WatchState::Seen => '🔴', \App\Services\WatchState::OnWatchlist => '🟡', \App\Services\WatchState::NeverSeen => '🟢' } }}</span>
+        <span class="text-lg leading-6" aria-hidden="true">{{ match ($state) { \App\Services\WatchState::Seen => '🟢', \App\Services\WatchState::OnWatchlist => '🟡', \App\Services\WatchState::NeverSeen => '🔴' } }}</span>
         <span class="min-w-0 flex-1 text-sm leading-6">
             @if ($state === \App\Services\WatchState::Seen)
                 <span class="block font-medium">{{ 'Gesehen am '.$status->lastWatchedAt->timezone(config('app.timezone'))->format('d.m.Y').($status->lastRating !== null ? ', deine Bewertung: '.$status->lastRating : '') }}</span>
                 @if ($status->viewingCount > 1 || $status->onWatchlist)
-                    <span class="block text-red-200/70">
+                    <span class="block text-emerald-200/70">
                         {{ collect([
                             $status->viewingCount > 1 ? $status->viewingCount.'× gesehen' : null,
                             $status->onWatchlist ? 'steht außerdem auf der Watchlist' : null,

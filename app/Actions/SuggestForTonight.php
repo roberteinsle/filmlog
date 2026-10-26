@@ -28,6 +28,7 @@ class SuggestForTonight
     /**
      * @param  list<int>  $genreIds  Film passt, wenn er mindestens eines der Genres hat; leer = egal
      * @param  list<int>  $excludedTmdbIds  bereits gezeigte Vorschläge
+     * @param  list<int>  $providerIds  nur Filme, die bei einem dieser Anbieter streamen; leer = egal
      * @return array{suggestions: Collection<int, Movie>, candidates: int, remaining: int}
      */
     public function handle(
@@ -38,8 +39,9 @@ class SuggestForTonight
         int $seed = 0,
         int $count = 3,
         string $source = self::SOURCE_WATCHLIST,
+        array $providerIds = [],
     ): array {
-        $candidates = $this->candidates($source, $maxFsk, $maxRuntime, $genreIds)->get();
+        $candidates = $this->candidates($source, $maxFsk, $maxRuntime, $genreIds, $providerIds)->get();
         $remaining = $candidates->reject(fn (Movie $movie): bool => in_array($movie->tmdb_id, $excludedTmdbIds, true))->values();
         $randomizer = new Randomizer(new Mt19937($seed));
 
@@ -57,9 +59,10 @@ class SuggestForTonight
      * Passende ungesehene Filme in Grundreihenfolge; watchlist_rank ist null für Plex-Filme, die nicht auf der Watchlist stehen.
      *
      * @param  list<int>  $genreIds
+     * @param  list<int>  $providerIds
      * @return Builder<Movie>
      */
-    private function candidates(string $source, ?int $maxFsk, ?int $maxRuntime, array $genreIds): Builder
+    private function candidates(string $source, ?int $maxFsk, ?int $maxRuntime, array $genreIds, array $providerIds): Builder
     {
         $watchlistId = MovieList::watchlist()->id;
 
@@ -80,6 +83,11 @@ class SuggestForTonight
             ->when($genreIds !== [], fn (Builder $query) => $query->where(function (Builder $query) use ($genreIds): void {
                 foreach ($genreIds as $genreId) {
                     $query->orWhereJsonContains('movies.genre_ids', $genreId);
+                }
+            }))
+            ->when($providerIds !== [], fn (Builder $query) => $query->where(function (Builder $query) use ($providerIds): void {
+                foreach ($providerIds as $providerId) {
+                    $query->orWhereJsonContains('movies.provider_ids', $providerId);
                 }
             }))
             ->orderByRaw('watchlist.rank asc nulls last')

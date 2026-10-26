@@ -1,11 +1,13 @@
 <?php
 
+use App\Jobs\RefreshMovie;
 use App\Livewire\Tonight;
 use App\Models\Companion;
 use App\Models\Movie;
 use App\Models\MovieList;
 use App\Models\StreamingSubscription;
 use App\Models\Viewing;
+use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -182,12 +184,59 @@ test('the source switches between watchlist and Plex library and is kept in the 
 });
 
 test('suggestions show which of your subscriptions stream them', function () {
-    fakeTmdb();
     StreamingSubscription::factory()->create(['provider_id' => 8, 'name' => 'Netflix']);
     StreamingSubscription::factory()->create(['provider_id' => 337, 'name' => 'Disney Plus']);
-    tonightCandidate(['tmdb_id' => 603, 'title' => 'Matrix']);
+    $matrix = tonightCandidate(['title' => 'Matrix', 'provider_ids' => [8, 30]]);
+
+    $component = Livewire::test(Tonight::class)->assertSeeInOrder(['Matrix', 'Watchlist', 'Netflix', 'Läuft gerade']);
+
+    expect($component->instance()->subscriptionsByMovie[$matrix->tmdb_id]->pluck('name')->all())->toBe(['Netflix']);
+});
+
+test('watchlist suggestions can be limited to your subscriptions', function () {
+    StreamingSubscription::factory()->create(['provider_id' => 8, 'name' => 'Netflix']);
+    StreamingSubscription::factory()->create(['provider_id' => 337, 'name' => 'Disney Plus']);
+    tonightCandidate(['title' => 'Netflix-Film', 'provider_ids' => [8]]);
+    tonightCandidate(['title' => 'Disney-Film', 'provider_ids' => [337, 30]]);
+    tonightCandidate(['title' => 'Nirgends', 'provider_ids' => []]);
+
+    $component = Livewire::test(Tonight::class)->assertSeeInOrder(['Bei welchem Abo?', 'egal', 'Disney Plus', 'Netflix']);
+    expect($component->instance()->result['candidates'])->toBe(3);
+
+    $component->call('toggleProvider', 337)->assertSet('providerIds', [337]);
+    expect($component->instance()->result['suggestions']->pluck('title')->all())->toBe(['Disney-Film']);
+
+    $component->call('toggleProvider', 8);
+    expect($component->instance()->result['suggestions']->pluck('title')->sort()->values()->all())->toBe(['Disney-Film', 'Netflix-Film']);
+
+    $component->call('chooseAllProviders')->assertSet('providerIds', []);
+    expect($component->instance()->result['candidates'])->toBe(3);
+});
+
+test('the subscription filter only applies to the watchlist', function () {
+    StreamingSubscription::factory()->create(['provider_id' => 337, 'name' => 'Disney Plus']);
+    Movie::factory()->create(['title' => 'Plex-Film', 'on_plex' => true, 'provider_ids' => []]);
+
+    $component = Livewire::withQueryParams(['abo' => ['337'], 'quelle' => 'plex'])->test(Tonight::class)
+        ->assertDontSee('Bei welchem Abo?');
+
+    expect($component->instance()->result['suggestions']->pluck('title')->all())->toBe(['Plex-Film']);
+});
+
+test('missing streaming info is fetched when filtering by subscription', function () {
+    Queue::fake();
+    StreamingSubscription::factory()->create(['provider_id' => 337, 'name' => 'Disney Plus']);
+    $unknown = tonightCandidate(['title' => 'Noch ohne Infos', 'provider_ids' => null]);
+    tonightCandidate(['title' => 'Mit Infos', 'provider_ids' => [337]]);
 
     Livewire::test(Tonight::class)
-        ->assertSeeInOrder(['Matrix', 'Watchlist', 'Netflix', 'Läuft gerade'])
-        ->assertDontSee('Disney Plus');
+        ->call('toggleProvider', 337)
+        ->assertSee('Für 1 Watchlist-Film werden die Streaming-Infos gerade geladen');
+
+    Queue::assertPushed(RefreshMovie::class, fn (RefreshMovie $job): bool => $job->tmdbId === $unknown->tmdb_id);
+    Queue::assertPushed(RefreshMovie::class, 1);
+});
+
+test('without subscriptions the filter links to the settings', function () {
+    Livewire::test(Tonight::class)->assertSee('Streaming-Abos in den Einstellungen wählen');
 });

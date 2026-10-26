@@ -1,5 +1,32 @@
 <div class="space-y-6">
-    <x-status-banner :status="$status" />
+    <div class="space-y-3">
+        <x-status-banner :status="$status" />
+
+        @if ($movie)
+            <div class="flex justify-end">
+                <button type="button" wire:click="openViewingDialog" class="inline-flex items-center gap-2 rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-stone-950 transition hover:bg-amber-300">
+                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>
+                    {{ $status->state === \App\Services\WatchState::Seen ? 'Wieder gesehen' : 'Gesehen' }}
+                </button>
+            </div>
+        @endif
+    </div>
+
+    @if ($showViewingDialog)
+        <x-modal :title="($details->title ?? $movie->title).' gesehen'" close="closeViewingDialog">
+            <x-viewing-form :companions="$this->companions" submit="saveViewing" cancel="closeViewingDialog" />
+        </x-modal>
+    @endif
+
+    @if ($askRemoveFromWatchlist)
+        <x-modal title="Von der Watchlist nehmen?" close="keepOnWatchlist">
+            <p class="text-sm text-stone-400">Die Sichtung ist gespeichert. Der Film steht noch auf deiner Watchlist.</p>
+            <div class="mt-5 flex justify-end gap-2">
+                <button type="button" wire:click="keepOnWatchlist" class="rounded-lg px-4 py-2 text-sm text-stone-400 hover:text-stone-100">Drauflassen</button>
+                <button type="button" wire:click="removeFromWatchlist" class="rounded-lg bg-amber-400 px-4 py-2 text-sm font-semibold text-stone-950 transition hover:bg-amber-300">Entfernen</button>
+            </div>
+        </x-modal>
+    @endif
 
     @if ($error)
         <x-placeholder>{{ $error }}</x-placeholder>

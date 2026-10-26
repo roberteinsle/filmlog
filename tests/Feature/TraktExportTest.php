@@ -69,12 +69,53 @@ test('irrelevant Trakt files are ignored silently, unknown ones are reported', f
         'ratings-shows.json' => [],
         'collection-movies.json' => [],
         'user-profile.json' => [],
+        'network-followers.json' => [],
+        'network-followers-requests.json' => [],
         'readme.json' => [],
         'notes.txt' => 'hallo',
         'history.json' => ['kein' => 'Array'],
     ]);
 
     expect($export->ignoredFiles())->toBe(['readme.json', 'history.json (kein JSON-Array)']);
+});
+
+test('the report lists the files read with their movie entries', function () {
+    $export = openTraktExport([
+        'watched-history.json' => [
+            ['id' => 1, 'watched_at' => '2024-01-01T20:00:00Z', 'type' => 'movie', 'movie' => traktMovie('A', 2000, ['tmdb' => 1])],
+            ['id' => 2, 'watched_at' => '2024-01-01T20:00:00Z', 'type' => 'episode', 'show' => ['title' => 'Dark']],
+        ],
+        'lists-watchlist.json' => [['rank' => 1, 'type' => 'movie', 'movie' => traktMovie('B', 2001, ['tmdb' => 2])]],
+        'ratings-movies.json' => [],
+    ]);
+
+    expect($export->readFiles())->toBe(['lists-watchlist.json (1)', 'ratings-movies.json (0)', 'watched-history.json (1)']);
+});
+
+test('movie ratings are also read from a combined ratings file', function () {
+    $export = openTraktExport([
+        'ratings.json' => [
+            ['rated_at' => '2024-05-01T22:00:00Z', 'rating' => 8, 'type' => 'movie', 'movie' => traktMovie('Heat', 1995, ['tmdb' => 949])],
+            ['rated_at' => '2024-05-01T22:00:00Z', 'rating' => 9, 'type' => 'show', 'show' => ['title' => 'Dark']],
+        ],
+    ]);
+
+    expect($export->ratings())->toHaveCount(1)
+        ->and($export->ratings()[0]['movie']['tmdb'])->toBe(949);
+});
+
+test('errors logged by the export tool are passed on', function () {
+    $export = openTraktExport([
+        '_errors.json' => [
+            ['file' => 'ratings-movies.json', 'error' => 'HTTP 502'],
+            'Timeout bei comments-movies',
+        ],
+    ]);
+
+    expect($export->exportErrors())->toBe([
+        '{"file":"ratings-movies.json","error":"HTTP 502"}',
+        'Timeout bei comments-movies',
+    ])->and($export->ignoredFiles())->toBe([]);
 });
 
 test('a file that is not a ZIP is rejected', function () {

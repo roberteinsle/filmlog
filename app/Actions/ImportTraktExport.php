@@ -45,6 +45,8 @@ class ImportTraktExport
             'status' => TraktImport::RUNNING,
             'total_movies' => count($movies),
             'ignored_files' => $export->ignoredFiles(),
+            'read_files' => $export->readFiles(),
+            'export_errors' => $export->exportErrors(),
             'started_at' => $import->started_at ?? now(),
         ])->save();
 
@@ -133,14 +135,36 @@ class ImportTraktExport
         }
 
         try {
-            $this->syncMovie->handle(MovieDetails::fromTmdb($this->tmdb->movie($tmdbId), $this->tmdb->region()));
+            $this->fetch($tmdbId);
         } catch (MovieNotFoundException) {
-            return [null, 'TMDB kennt die ID nicht (mehr)'];
-        } finally {
-            usleep(self::TMDB_PAUSE_MICROSECONDS);
+            // Veraltete TMDB-ID im Export (Film bei TMDB zusammengelegt oder neu angelegt): über die IMDb-ID nachschlagen.
+            $currentTmdbId = $movie['imdb'] !== null ? $this->tmdb->findMovieIdByImdbId($movie['imdb']) : null;
+
+            if ($currentTmdbId === null || $currentTmdbId === $tmdbId) {
+                return [null, 'TMDB kennt die ID nicht (mehr)'];
+            }
+
+            if (! Movie::query()->whereKey($currentTmdbId)->exists()) {
+                try {
+                    $this->fetch($currentTmdbId);
+                } catch (MovieNotFoundException) {
+                    return [null, 'TMDB kennt die ID nicht (mehr)'];
+                }
+            }
+
+            return [$currentTmdbId, ''];
         }
 
         return [$tmdbId, ''];
+    }
+
+    private function fetch(int $tmdbId): void
+    {
+        try {
+            $this->syncMovie->handle(MovieDetails::fromTmdb($this->tmdb->movie($tmdbId), $this->tmdb->region()));
+        } finally {
+            usleep(self::TMDB_PAUSE_MICROSECONDS);
+        }
     }
 
     /**

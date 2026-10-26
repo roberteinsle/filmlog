@@ -74,6 +74,8 @@ test('a finished import shows its report', function () {
         'stats' => ['viewings_created' => 812, 'ratings_applied' => 400, 'movies_unresolved' => 1],
         'unresolved' => [['key' => 'trakt:9', 'title' => 'Ohne IDs', 'year' => 1931, 'ids' => 'trakt 9', 'reason' => 'Weder TMDB- noch IMDb-ID im Export']],
         'ignored_files' => ['readme.json'],
+        'read_files' => ['watched-history.json (992)', 'ratings-movies.json (0)'],
+        'export_errors' => ['{"file":"ratings-movies.json","error":"HTTP 502"}'],
         'finished_at' => now(),
     ]);
 
@@ -83,6 +85,9 @@ test('a finished import shows its report', function () {
         ->assertSeeInOrder(['812', 'Sichtungen neu', '400', 'Bewertungen übernommen'])
         ->assertSee('1 Film nicht zuordenbar')
         ->assertSee('Ohne IDs')
+        ->assertSee('Gelesen (Film-Einträge): watched-history.json (992), ratings-movies.json (0)')
+        ->assertSee('Der Trakt-Export meldet 1 Fehler (_errors.json)')
+        ->assertSee('HTTP 502')
         ->assertSee('Nicht erkannte Dateien: readme.json');
 });
 

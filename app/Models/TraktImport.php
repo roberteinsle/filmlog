@@ -14,8 +14,10 @@ use Illuminate\Database\Eloquent\Model;
  * @property array<string, int> $stats
  * @property list<array{key: string, title: string, year: ?int, ids: string, reason: string}> $unresolved
  * @property list<string> $ignored_files
+ * @property list<string> $read_files
+ * @property list<string> $export_errors
  */
-#[Fillable(['original_name', 'path', 'status', 'total_movies', 'resolved', 'stats', 'unresolved', 'ignored_files', 'error', 'started_at', 'finished_at'])]
+#[Fillable(['original_name', 'path', 'status', 'total_movies', 'resolved', 'stats', 'unresolved', 'ignored_files', 'read_files', 'export_errors', 'error', 'started_at', 'finished_at'])]
 class TraktImport extends Model
 {
     /** @use HasFactory<TraktImportFactory> */
@@ -41,6 +43,8 @@ class TraktImport extends Model
         'stats' => '{}',
         'unresolved' => '[]',
         'ignored_files' => '[]',
+        'read_files' => '[]',
+        'export_errors' => '[]',
     ];
 
     /**
@@ -54,6 +58,8 @@ class TraktImport extends Model
             'stats' => 'array',
             'unresolved' => 'array',
             'ignored_files' => 'array',
+            'read_files' => 'array',
+            'export_errors' => 'array',
             'started_at' => 'datetime',
             'finished_at' => 'datetime',
         ];

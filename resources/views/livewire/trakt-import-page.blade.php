@@ -111,8 +111,23 @@
                                 </details>
                             @endif
 
+                            @if ($import->export_errors !== [])
+                                <details class="mt-3 text-sm" open>
+                                    <summary class="cursor-pointer text-red-300">Der Trakt-Export meldet {{ count($import->export_errors) }} Fehler (_errors.json)</summary>
+                                    <ul class="mt-2 space-y-1 font-mono text-xs break-all text-stone-400">
+                                        @foreach ($import->export_errors as $exportError)
+                                            <li>{{ $exportError }}</li>
+                                        @endforeach
+                                    </ul>
+                                </details>
+                            @endif
+
+                            @if ($import->read_files !== [])
+                                <p class="mt-2 text-xs text-stone-500">Gelesen (Film-Einträge): {{ implode(', ', $import->read_files) }}</p>
+                            @endif
+
                             @if ($import->ignored_files !== [])
-                                <p class="mt-2 text-xs text-stone-500">Nicht erkannte Dateien: {{ implode(', ', $import->ignored_files) }}</p>
+                                <p class="mt-1 text-xs text-stone-500">Nicht erkannte Dateien: {{ implode(', ', $import->ignored_files) }}</p>
                             @endif
                         </li>
                     @endforeach

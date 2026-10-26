@@ -24,7 +24,12 @@ class TraktExport
     /**
      * Dateien, die Trakt mitliefert, für Filmlog aber keine Rolle spielen.
      */
-    private const string IGNORED_PATTERN = '/^(watched|collection|ratings|comments|likes|user|followers|following|friends|recommendations|hidden|playback|stats|settings|profile|notes)[-.]/';
+    private const string IGNORED_PATTERN = '/^(_|(watched|collection|ratings|comments|likes|user|network|followers|following|friends|recommendations|hidden|playback|stats|settings|profile|notes)[-.])/';
+
+    /**
+     * Höchstzahl der Meldungen aus _errors.json im Bericht.
+     */
+    private const int MAX_EXPORT_ERRORS = 20;
 
     /** @var list<HistoryEntry> */
     private array $history = [];
@@ -40,6 +45,12 @@ class TraktExport
 
     /** @var list<string> */
     private array $ignoredFiles = [];
+
+    /** @var list<string> Gelesene Dateien mit Anzahl der Film-Einträge, z. B. „ratings-movies.json (412)“ */
+    private array $readFiles = [];
+
+    /** @var list<string> */
+    private array $exportErrors = [];
 
     private int $skippedNonMovies = 0;
 
@@ -123,6 +134,24 @@ class TraktExport
         return $this->ignoredFiles;
     }
 
+    /**
+     * @return list<string>
+     */
+    public function readFiles(): array
+    {
+        return $this->readFiles;
+    }
+
+    /**
+     * Fehler, die das Export-Werkzeug selbst in _errors.json protokolliert hat (z. B. fehlgeschlagene Abrufe).
+     *
+     * @return list<string>
+     */
+    public function exportErrors(): array
+    {
+        return $this->exportErrors;
+    }
+
     public function skippedNonMovies(): int
     {
         return $this->skippedNonMovies;
@@ -149,7 +178,8 @@ class TraktExport
 
             $kind = match (true) {
                 (bool) preg_match('/^(watched-)?history(-\d+)?\.json$/', $name) => 'history',
-                $name === 'ratings-movies.json' => 'ratings',
+                (bool) preg_match('/^ratings(-movies)?(-\d+)?\.json$/', $name) => 'ratings',
+                $name === '_errors.json' => 'errors',
                 (bool) preg_match('/^(lists-)?watchlist(-movies)?(-\d+)?\.json$/', $name) => 'watchlist',
                 in_array($name, ['lists-lists.json', 'lists.json'], true) => 'list-names',
                 str_starts_with($name, 'lists-') => 'list',
@@ -166,20 +196,30 @@ class TraktExport
 
             $data = json_decode((string) $zip->getFromIndex($index), true);
 
+            if ($kind === 'errors') {
+                $this->readExportErrors($data);
+
+                continue;
+            }
+
             if (! is_array($data) || ! array_is_list($data)) {
                 $this->ignoredFiles[] = $name.' (kein JSON-Array)';
 
                 continue;
             }
 
-            match ($kind) {
+            $movieEntries = match ($kind) {
                 'history' => $this->readHistory($data),
                 'ratings' => $this->readRatings($data),
-                'watchlist' => array_push($this->watchlist, ...$this->listEntries($data)),
-                'list-names' => $listNames = $this->readListNames($data),
-                'list' => $listFiles[Str::after(Str::beforeLast($name, '.json'), 'lists-')] = $this->listEntries($data),
+                'watchlist' => $this->readWatchlist($data),
+                'list-names' => count($listNames = $this->readListNames($data)),
+                'list' => count($listFiles[Str::after(Str::beforeLast($name, '.json'), 'lists-')] = $this->listEntries($data)),
             };
+
+            $this->readFiles[] = "{$name} ({$movieEntries})";
         }
+
+        sort($this->readFiles);
 
         usort($this->watchlist, fn (array $a, array $b): int => $a['rank'] <=> $b['rank']);
 
@@ -192,8 +232,10 @@ class TraktExport
     /**
      * @param  list<mixed>  $data
      */
-    private function readHistory(array $data): void
+    private function readHistory(array $data): int
     {
+        $before = count($this->history);
+
         foreach ($data as $item) {
             $movie = $this->movieOf($item);
 
@@ -203,13 +245,17 @@ class TraktExport
 
             $this->history[] = ['id' => (string) $item['id'], 'watched_at' => (string) $item['watched_at'], 'movie' => $movie];
         }
+
+        return count($this->history) - $before;
     }
 
     /**
      * @param  list<mixed>  $data
      */
-    private function readRatings(array $data): void
+    private function readRatings(array $data): int
     {
+        $before = count($this->ratings);
+
         foreach ($data as $item) {
             $movie = $this->movieOf($item);
             $rating = (int) ($item['rating'] ?? 0);
@@ -219,6 +265,31 @@ class TraktExport
             }
 
             $this->ratings[] = ['rating' => $rating, 'rated_at' => $item['rated_at'] ?? null, 'movie' => $movie];
+        }
+
+        return count($this->ratings) - $before;
+    }
+
+    /**
+     * @param  list<mixed>  $data
+     */
+    private function readWatchlist(array $data): int
+    {
+        $entries = $this->listEntries($data);
+        array_push($this->watchlist, ...$entries);
+
+        return count($entries);
+    }
+
+    private function readExportErrors(mixed $data): void
+    {
+        foreach (is_array($data) ? $data : [$data] as $key => $error) {
+            if (count($this->exportErrors) >= self::MAX_EXPORT_ERRORS) {
+                return;
+            }
+
+            $message = is_scalar($error) ? (string) $error : json_encode($error, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $this->exportErrors[] = Str::limit((is_string($key) ? "{$key}: " : '').$message, 200);
         }
     }
 

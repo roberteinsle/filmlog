@@ -14,6 +14,7 @@ beforeEach(function () {
     Http::fake([
         'api.themoviedb.org/3/movie/603*' => Http::response(tmdbFixture('movie-603')),
         'api.themoviedb.org/3/find/tt0133093*' => Http::response(['movie_results' => [['id' => 603]], 'tv_results' => []]),
+        'api.themoviedb.org/3/find/tt2814388*' => Http::response(['movie_results' => [['id' => 603]], 'tv_results' => []]),
         'api.themoviedb.org/3/find/*' => Http::response(['movie_results' => [], 'tv_results' => []]),
         'api.themoviedb.org/3/movie/*' => Http::response(['status_code' => 34], 404),
     ]);
@@ -84,6 +85,8 @@ test('a Trakt export becomes viewings, ratings, watchlist and lists', function (
         ])
         ->and($import->finished_at)->not->toBeNull();
 
+    expect($import->read_files)->toContain('watched-history.json (2)', 'ratings-movies.json (2)', 'watchlist.json (1)');
+
     $matrixViewings = Viewing::query()->where('tmdb_id', 603)->orderBy('watched_at')->get();
 
     expect(Movie::find(603)->title)->toBe('Matrix')
@@ -140,6 +143,17 @@ test('movies without TMDB id are resolved via IMDb', function () {
     ]);
 
     expect(Viewing::sole()->tmdb_id)->toBe(603);
+});
+
+test('an outdated TMDB id is replaced via the IMDb id', function () {
+    $import = runTraktImport([
+        'watched-history.json' => [
+            ['id' => 1, 'watched_at' => '2024-01-01T20:00:00Z', 'type' => 'movie', 'movie' => traktMovie('Logan', 2013, ['trakt' => 140293, 'imdb' => 'tt2814388', 'tmdb' => 229801])],
+        ],
+    ]);
+
+    expect(Viewing::sole()->tmdb_id)->toBe(603)
+        ->and($import->unresolved)->toBe([]);
 });
 
 test('movies that cannot be resolved end up in the report', function () {

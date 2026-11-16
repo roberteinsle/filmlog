@@ -2,9 +2,16 @@
 
 namespace App\Providers;
 
+use App\Http\Responses\PasskeyLoginResponse;
+use App\Models\User;
 use App\Services\Plex\PlexClient;
 use App\Services\Tmdb\TmdbClient;
+use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
+use Laravel\Passkeys\Contracts\PasskeyLoginResponse as PasskeyLoginResponseContract;
+use Laravel\Passkeys\Contracts\PasskeyUser;
+use Laravel\Passkeys\Passkeys;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +31,8 @@ class AppServiceProvider extends ServiceProvider
             url: config('services.plex.url'),
             token: config('services.plex.token'),
         ));
+
+        $this->app->singleton(PasskeyLoginResponseContract::class, PasskeyLoginResponse::class);
     }
 
     /**
@@ -31,6 +40,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Wie beim Magic Link: Nur das Admin-Konto darf sich anmelden.
+        Passkeys::authorizeLoginUsing(fn (Request $request, PasskeyUser $user): bool => $user instanceof User
+            && Str::lower($user->email) === Str::lower((string) config('filmlog.admin_email')));
     }
 }

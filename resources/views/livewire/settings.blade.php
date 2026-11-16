@@ -151,6 +151,8 @@
         </dl>
     </section>
 
+    <livewire:security-settings />
+
     <section class="mt-10 max-w-2xl">
         <h2 class="mb-1 text-lg font-semibold tracking-tight">Daten</h2>
         <p class="mb-4 text-sm text-stone-400">Verlauf, Bewertungen, Watchlist und Listen aus einem Trakt-Export übernehmen.</p>

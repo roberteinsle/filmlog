@@ -26,7 +26,7 @@ class EnsureLoginIsFresh
             $request->session()->regenerateToken();
 
             return redirect()->route('login')
-                ->with('status', 'Deine Anmeldung ist abgelaufen. Fordere einen neuen Login-Link an.');
+                ->with('status', 'Deine Anmeldung ist abgelaufen. Bitte melde dich neu an.');
         }
 
         return $next($request);

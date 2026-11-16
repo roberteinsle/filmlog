@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\LoginLinkController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\PlexWebhookController;
 use App\Livewire\Auth\Login;
+use App\Livewire\Auth\TwoFactorChallenge;
 use App\Livewire\CinemaCharts;
 use App\Livewire\Diary;
 use App\Livewire\Lists;
@@ -26,6 +27,7 @@ Route::middleware('guest')->group(function () {
         ->where('token', LoginLinks::TOKEN_PATTERN)
         ->middleware('throttle:10,1')
         ->name('login.link.confirm');
+    Route::livewire('/anmelden/code', TwoFactorChallenge::class)->name('login.two-factor');
 });
 
 Route::middleware(['auth', 'login.fresh'])->group(function () {

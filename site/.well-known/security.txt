@@ -1,0 +1,6 @@
+# Filmlog: please report vulnerabilities privately through GitHub, not in public issues.
+Contact: https://github.com/roberteinsle/filmlog/security/advisories/new
+Policy: https://github.com/roberteinsle/filmlog/wiki/Security
+Preferred-Languages: en, de
+Canonical: https://filmlog.einsle.app/.well-known/security.txt
+Expires: 2027-11-17T00:00:00Z

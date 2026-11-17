@@ -50,6 +50,7 @@ The project website <https://filmlog.einsle.app> is the overview of all features
 | `assets/` | Styles, script, favicon, social preview image (`og.png`) and the self hosted Instrument Sans font with its licence |
 | `robots.txt`, `sitemap.xml` | Crawling rules and sitemap |
 | `llms.txt` | Plain summary with links for AI assistants |
+| `.well-known/security.txt` | How to report vulnerabilities (RFC 9116); renew `Expires` once a year |
 | `CNAME` | Custom domain `filmlog.einsle.app` |
 
 Rules for changes:

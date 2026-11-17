@@ -4,6 +4,7 @@
 
 ## Key facts
 
+- Current version: 0.1.0 (see https://github.com/roberteinsle/filmlog/releases)
 - Purpose: answer "have I seen this already?" and "what do we watch tonight?"
 - Users: exactly one account per installation (set by FILMLOG_ADMIN_EMAIL); companions are tracked per viewing
 - Film data: TMDB (free API token required), German language and region by default

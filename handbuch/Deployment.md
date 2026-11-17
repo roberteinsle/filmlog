@@ -53,4 +53,10 @@ The weekly build picks up the newest PHP patch release of the base image.
 
 ## Releases
 
-Every push to `main` deploys. Versioned releases (`v*` tags) are created deliberately, not automatically.
+Every push to `main` deploys. Versioned releases are created deliberately, never automatically:
+
+1. Pick the next version following [semantic versioning](https://semver.org/) (`v0.1.0`, `v0.2.0`, …).
+2. Create the release on GitHub (or `gh release create vX.Y.Z --generate-notes`). The tag starts the build workflow, which publishes the image as `ghcr.io/<owner>/filmlog:X.Y.Z` in addition to `latest`.
+3. To pin a server to a version, set `APP_TAG=X.Y.Z` in Coolify instead of `latest`.
+
+Release notes list new features, fixes and anything that needs action on the server (new variables, a changed compose file).

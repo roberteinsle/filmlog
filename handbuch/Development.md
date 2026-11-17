@@ -24,7 +24,8 @@ docker compose exec app php artisan test --compact --filter=Tonight
 | Where | What |
 |---|---|
 | `handbuch/*.md` | All details. Source of the wiki. |
-| `README.md` | Short overview and quick start; only changes with a new module or a changed quick start |
+| `README.md` | Overview, quick start and links; only changes with a new module or a changed quick start |
+| `SECURITY.md` | How to report vulnerabilities |
 | `CLAUDE.md` | Rules and workflows for contributors and coding agents |
 | `site/` | Project website on GitHub Pages |
 
@@ -52,6 +53,7 @@ The project website <https://filmlog.einsle.app> is the overview of all features
 | `llms.txt` | Plain summary with links for AI assistants |
 | `.well-known/security.txt` | How to report vulnerabilities (RFC 9116); renew `Expires` once a year |
 | `CNAME` | Custom domain `filmlog.einsle.app` |
+| `assets/logo.svg`, `assets/social-preview.png` | Logo and the 1280×640 social preview, also used in the README and as the repository's social preview |
 
 Rules for changes:
 

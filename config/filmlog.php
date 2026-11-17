@@ -9,10 +9,11 @@ return [
     |
     | Filmlog hat genau ein Konto. Nur an diese Adresse wird ein Login-Link
     | verschickt; das Konto wird beim ersten Login automatisch angelegt.
+    | Pflicht: Ohne FILMLOG_ADMIN_EMAIL ist keine Anmeldung möglich.
     |
     */
 
-    'admin_email' => env('FILMLOG_ADMIN_EMAIL', 'robert@einsle.com'),
+    'admin_email' => env('FILMLOG_ADMIN_EMAIL'),
 
     'login_link_minutes' => 15,
 

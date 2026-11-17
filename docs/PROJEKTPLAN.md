@@ -6,13 +6,13 @@ Stand: 25.10.2026 · Repo: `roberteinsle/Filmlog` (privat) · Ziel-URL: https://
 
 | Thema | Entscheidung |
 |---|---|
-| Nutzer | Single-User, zugleich Admin: `robert@einsle.com` (`FILMLOG_ADMIN_EMAIL`). Das Konto wird beim ersten Login automatisch angelegt |
+| Nutzer | Single-User, zugleich Admin: die Adresse aus `FILMLOG_ADMIN_EMAIL`. Das Konto wird beim ersten Login automatisch angelegt |
 | Login | Magic Link per Mail (AWS SES über SMTP): Link 15 Min. gültig und nur einmal verwendbar, Login danach 7 Tage (absolut). Kein Passwort. Alle Routen hinter `auth` außer `/up` und Webhooks |
 | Stack | PHP 8.5 · Laravel 13 · Livewire 4 + Blade + Tailwind 4 (Vite) · Drag & Drop mit Livewire-eigenem `wire:sort` · Pest für Tests (gegen Postgres) |
 | Datenbank | PostgreSQL 17 als eigene Coolify-Ressource im selben Netz, nicht im Compose-Stack |
 | Queue / Cache / Session | Treiber `database`, kein Redis |
 | Bewertung | 1–10 **pro Sichtung**; Status-Banner und Filter nutzen die jüngste Bewertung. Tabelle `ratings` entfällt |
-| „Mit wem“ | Tabelle `companions` (Jasmin, Familie, …), erweiterbar, Mehrfachauswahl. Keine Auswahl = allein. Jede Begleitung hat optional eine `max_fsk` (z. B. Familie → 12) |
+| „Mit wem“ | Tabelle `companions` (Partnerin, Familie, Freunde …), erweiterbar, Mehrfachauswahl. Keine Auswahl = allein. Jede Begleitung hat optional eine `max_fsk` (z. B. Familie → 12) |
 | TMDB | API v4 Read Access Token, `language=de-DE`, `region=DE`, FSK aus `release_dates` (DE), Anbieter aus `watch/providers` (DE) |
 | Cache | `movies` um Felder für Filter und Statistik erweitert; Inhalt, Cast, Anbieter und Bilder kommen live (mit kurzem HTTP-Cache) |
 | Stimmung | Feste Stimmungen → TMDB-Genres, Zuordnung in `config/filmlog.php` |
@@ -157,7 +157,7 @@ Absicherung: `.env*` in `.gitignore` und `.dockerignore`, im Repo nur `.env.exam
 4. Coolify: Docker Compose Empty anlegen, `deploy/docker-compose.coolify.yml` einfügen, Env-Variablen setzen, Domain `https://filmlog.einsle.cloud` → Port 8080 am Dienst `app`
 5. DNS: `filmlog.einsle.cloud` auf den Coolify-Server (entfällt bei Wildcard)
 6. Secrets `COOLIFY_TOKEN` und `COOLIFY_WEBHOOK` im Repo hinterlegen
-7. Erstes Deploy, `php -v` im Container (≥ 8.5.12), danach per Magic Link mit `robert@einsle.com` anmelden
+7. Erstes Deploy, `php -v` im Container (≥ 8.5.12), danach per Magic Link mit der Adresse aus `FILMLOG_ADMIN_EMAIL` anmelden
 
 ## 7. Hinweise zur Vorlage „Tech Stack“
 

@@ -43,7 +43,7 @@ test('at most three suggestions are shown', function () {
 });
 
 test('companions set the FSK limit, the strictest one wins', function () {
-    $jasmin = Companion::factory()->create(['name' => 'Jasmin', 'max_fsk' => null]);
+    $sam = Companion::factory()->create(['name' => 'Sam', 'max_fsk' => null]);
     $family = Companion::factory()->create(['name' => 'Familie', 'max_fsk' => 12]);
     $kids = Companion::factory()->create(['name' => 'Kinder', 'max_fsk' => 6]);
     tonightCandidate(['title' => 'FSK 0', 'fsk' => 0]);
@@ -51,8 +51,8 @@ test('companions set the FSK limit, the strictest one wins', function () {
     tonightCandidate(['title' => 'FSK 18', 'fsk' => 18]);
 
     $component = Livewire::test(Tonight::class)
-        ->call('toggleCompanion', $jasmin->id)
-        ->assertSet('companionIds', [$jasmin->id])
+        ->call('toggleCompanion', $sam->id)
+        ->assertSet('companionIds', [$sam->id])
         ->assertDontSee('bis FSK');
     expect($component->instance()->result['candidates'])->toBe(3);
 
@@ -126,11 +126,11 @@ test('an empty result explains what to do', function () {
 
 test('now playing logs a viewing for today with the chosen companions and opens the rating', function () {
     $this->travelTo(now()->setTime(20, 15));
-    $jasmin = Companion::factory()->create(['name' => 'Jasmin']);
+    $sam = Companion::factory()->create(['name' => 'Sam']);
     $heat = tonightCandidate(['title' => 'Heat']);
 
     $component = Livewire::test(Tonight::class)
-        ->call('toggleCompanion', $jasmin->id)
+        ->call('toggleCompanion', $sam->id)
         ->call('nowPlaying', $heat->tmdb_id)
         ->assertSet('showViewingDialog', true)
         ->assertSee('„Heat“ läuft');
@@ -140,7 +140,7 @@ test('now playing logs a viewing for today with the chosen companions and opens 
     expect($viewing->tmdb_id)->toBe($heat->tmdb_id)
         ->and($viewing->watched_at->equalTo(now()))->toBeTrue()
         ->and($viewing->rating)->toBeNull()
-        ->and($viewing->companions->pluck('name')->all())->toBe(['Jasmin']);
+        ->and($viewing->companions->pluck('name')->all())->toBe(['Sam']);
 
     $component->set('form.rating', 8)
         ->call('saveViewing')

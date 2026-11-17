@@ -28,14 +28,14 @@ test('the dialog defaults to today without rating or companions', function () {
 });
 
 test('saving logs a viewing with rating, companions and note', function () {
-    $jasmin = Companion::factory()->create(['name' => 'Jasmin']);
+    $sam = Companion::factory()->create(['name' => 'Sam']);
     $family = Companion::factory()->create(['name' => 'Familie']);
     Companion::factory()->create(['name' => 'Kollegen']);
 
     Livewire::test(MovieShow::class, ['tmdbId' => 603])
         ->call('openViewingDialog')
         ->set('form.rating', 9)
-        ->set('form.companionIds', [(string) $jasmin->id, (string) $family->id])
+        ->set('form.companionIds', [(string) $sam->id, (string) $family->id])
         ->set('form.note', '  Immer noch großartig.  ')
         ->call('saveViewing')
         ->assertHasNoErrors()
@@ -50,7 +50,7 @@ test('saving logs a viewing with rating, companions and note', function () {
         ->note->toBe('Immer noch großartig.')
         ->source->toBe('manual')
         ->and($viewing->watched_at->equalTo(now()))->toBeTrue()
-        ->and($viewing->companions->pluck('name')->all())->toEqualCanonicalizing(['Jasmin', 'Familie']);
+        ->and($viewing->companions->pluck('name')->all())->toEqualCanonicalizing(['Sam', 'Familie']);
 });
 
 test('a viewing without rating and companions is allowed', function () {

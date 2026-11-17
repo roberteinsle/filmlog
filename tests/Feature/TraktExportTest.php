@@ -128,10 +128,10 @@ test('list names are matched by Trakt id in newer exports', function () {
     $export = openTraktExport([
         'lists-lists.json' => [
             ['name' => 'Deutsche Kino-Charts 2022 (German Top Box Office 2022)', 'ids' => ['trakt' => 25150071, 'slug' => 'deutsche-kino-charts-2022-german-top-box-office-2022']],
-            ['name' => 'Jasmin', 'ids' => ['trakt' => 32133025, 'slug' => 'jasmin']],
+            ['name' => 'Sam', 'ids' => ['trakt' => 32133025, 'slug' => 'sam']],
         ],
         'lists-list-25150071-deutsche-kino-charts-2022-german-top-box-office-2022.json' => [['rank' => 1, 'type' => 'movie', 'movie' => traktMovie('A', 2022, ['tmdb' => 1])]],
-        'lists-list-32133025-jasmin.json' => [],
+        'lists-list-32133025-sam.json' => [],
         'lists-favorites.json' => [],
         'lists-collaborations.json' => [['type' => 'list', 'list' => ['name' => 'Fremde Liste']]],
     ]);
@@ -142,7 +142,7 @@ test('list names are matched by Trakt id in newer exports', function () {
         'is_listed' => true,
         'is_skipped' => false,
     ])
-        ->and($export->lists()['list-32133025-jasmin'])->toMatchArray(['name' => 'Jasmin', 'is_listed' => true, 'items' => []])
+        ->and($export->lists()['list-32133025-sam'])->toMatchArray(['name' => 'Sam', 'is_listed' => true, 'items' => []])
         ->and($export->lists()['favorites'])->toMatchArray(['name' => 'Favoriten', 'legacy_name' => 'Favorites', 'is_listed' => false])
         ->and($export->lists()['collaborations'])->toMatchArray(['is_skipped' => true, 'items' => []])
         ->and($export->skippedNonMovies())->toBe(0);

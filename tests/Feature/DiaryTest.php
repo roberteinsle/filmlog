@@ -49,13 +49,13 @@ test('an entry shows rating, companions and note', function () {
     $viewing = Viewing::factory()->for(Movie::factory()->create(['title' => 'Heat']))
         ->create(['watched_at' => '2026-10-20 20:00', 'rating' => 8, 'note' => 'Die Banküberfall-Szene!']);
     $viewing->companions()->attach([
-        Companion::factory()->create(['name' => 'Jasmin', 'sort' => 1])->id,
+        Companion::factory()->create(['name' => 'Sam', 'sort' => 1])->id,
         Companion::factory()->create(['name' => 'Tom', 'sort' => 2])->id,
     ]);
     Viewing::factory()->for(Movie::factory()->create(['title' => 'Alien']))->create(['watched_at' => '2026-10-10 20:00', 'rating' => null]);
 
     $this->get(route('diary'))
-        ->assertSeeInOrder(['Heat', '8', '/10', 'mit Jasmin und Tom', '„Die Banküberfall-Szene!“', 'Alien', 'allein']);
+        ->assertSeeInOrder(['Heat', '8', '/10', 'mit Sam und Tom', '„Die Banküberfall-Szene!“', 'Alien', 'allein']);
 });
 
 test('imported viewings show their source', function () {
@@ -65,7 +65,7 @@ test('imported viewings show their source', function () {
 });
 
 test('a viewing can be edited', function () {
-    $jasmin = Companion::factory()->create(['name' => 'Jasmin']);
+    $sam = Companion::factory()->create(['name' => 'Sam']);
     $viewing = Viewing::factory()->for(Movie::factory()->create(['title' => 'Heat']))
         ->create(['watched_at' => '2026-10-20 18:15:00+00:00', 'rating' => 6, 'note' => null]);
 
@@ -76,12 +76,12 @@ test('a viewing can be edited', function () {
         ->assertSet('form.rating', 6)
         ->assertSee('Sichtung von „Heat“ bearbeiten')
         ->set('form.rating', 7)
-        ->set('form.companionIds', [(string) $jasmin->id])
+        ->set('form.companionIds', [(string) $sam->id])
         ->set('form.note', 'Beim zweiten Mal besser.')
         ->call('updateViewing')
         ->assertHasNoErrors()
         ->assertSet('showViewingDialog', false)
-        ->assertSee('mit Jasmin');
+        ->assertSee('mit Sam');
 
     $viewing->refresh();
 
@@ -89,7 +89,7 @@ test('a viewing can be edited', function () {
         ->rating->toBe(7)
         ->note->toBe('Beim zweiten Mal besser.')
         ->and($viewing->watched_at->utc()->format('Y-m-d H:i'))->toBe('2026-10-20 18:15')
-        ->and($viewing->companions->pluck('id')->all())->toBe([$jasmin->id]);
+        ->and($viewing->companions->pluck('id')->all())->toBe([$sam->id]);
 });
 
 test('changing the date of a viewing moves it to 8 pm on that day', function () {

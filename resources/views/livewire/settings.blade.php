@@ -50,7 +50,7 @@
 
         <form wire:submit="addCompanion" class="flex flex-wrap items-start gap-2">
             <div class="min-w-0 flex-1">
-                <input type="text" wire:model="name" maxlength="50" placeholder="Neue Begleitung, z. B. Jasmin" aria-label="Name der neuen Begleitung"
+                <input type="text" wire:model="name" maxlength="50" placeholder="Neue Begleitung, z. B. Familie" aria-label="Name der neuen Begleitung"
                        class="w-full rounded-lg border border-stone-700 bg-stone-900 px-3 py-2 text-sm outline-none placeholder:text-stone-600 focus:border-amber-400">
                 @error('name') <p class="mt-1 text-sm text-red-400">{{ $message }}</p> @enderror
             </div>

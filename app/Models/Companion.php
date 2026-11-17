@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * Begleitung für „Mit wem“ (Jasmin, Familie, …). max_fsk = höchste passende Altersfreigabe.
+ * Begleitung für „Mit wem“ (Partnerin, Familie, Freunde …). max_fsk = höchste passende Altersfreigabe.
  */
 #[Fillable(['name', 'max_fsk', 'sort'])]
 class Companion extends Model

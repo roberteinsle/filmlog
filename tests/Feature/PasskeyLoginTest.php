@@ -29,6 +29,14 @@ test('only the admin account may log in with a passkey', function (string $email
     'other' => ['fremd@example.com', false],
 ]);
 
+test('without a configured admin address no passkey may log in', function () {
+    config(['filmlog.admin_email' => null]);
+    $user = User::factory()->create(['email' => '']);
+    $passkey = $user->passkeys()->create(['name' => 'iPhone', 'credential_id' => 'abc', 'credential' => []]);
+
+    expect(Passkeys::allowsLogin(Request::create('/passkeys/login', 'POST'), $passkey->fresh()))->toBeFalse();
+});
+
 test('a passkey login starts the seven day login period', function () {
     $this->actingAs(User::factory()->create());
 

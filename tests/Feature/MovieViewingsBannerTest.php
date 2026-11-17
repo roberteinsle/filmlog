@@ -14,13 +14,13 @@ beforeEach(function () {
 
 test('the banner of a seen movie unfolds to all viewings', function () {
     $older = Viewing::factory()->for($this->movie)->create(['watched_at' => '2025-03-01 20:00', 'rating' => 6, 'note' => 'Etwas lang.']);
-    $older->companions()->attach(Companion::factory()->create(['name' => 'Jasmin']));
+    $older->companions()->attach(Companion::factory()->create(['name' => 'Sam']));
     Viewing::factory()->for($this->movie)->create(['watched_at' => '2026-10-16 20:00', 'rating' => 7, 'source' => 'trakt', 'external_id' => '1']);
 
     $this->get(route('movie', 603))
         ->assertSeeHtml('x-on:click="open = ! open"')
         ->assertSee('Sichtungen anzeigen')
-        ->assertSeeInOrder(['Gesehen am 16.10.2026, deine Bewertung: 7', '2× gesehen', 'Fr., 16.10.2026', '7', 'allein', 'Trakt', 'Sa., 01.03.2025', '6', 'mit Jasmin', '„Etwas lang.“']);
+        ->assertSeeInOrder(['Gesehen am 16.10.2026, deine Bewertung: 7', '2× gesehen', 'Fr., 16.10.2026', '7', 'allein', 'Trakt', 'Sa., 01.03.2025', '6', 'mit Sam', '„Etwas lang.“']);
 });
 
 test('banners without viewings do not unfold', function () {

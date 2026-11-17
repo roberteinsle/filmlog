@@ -42,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Wie beim Magic Link: Nur das Admin-Konto darf sich anmelden.
         Passkeys::authorizeLoginUsing(fn (Request $request, PasskeyUser $user): bool => $user instanceof User
+            && filled(config('filmlog.admin_email'))
             && Str::lower($user->email) === Str::lower((string) config('filmlog.admin_email')));
     }
 }

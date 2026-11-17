@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * „Mit wem“: Jasmin, Familie, … Keine Begleitung an einer Sichtung = allein.
+     * „Mit wem“: Partnerin, Familie, Freunde … Keine Begleitung an einer Sichtung = allein.
      * max_fsk begrenzt später die Vorschläge im Heute-Abend-Assistenten.
      */
     public function up(): void

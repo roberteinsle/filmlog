@@ -30,7 +30,7 @@ x-env: &env
   PLEX_WEBHOOK_SECRET: ${PLEX_WEBHOOK_SECRET}
   PLEX_URL: ${PLEX_URL}
   PLEX_TOKEN: ${PLEX_TOKEN}
-  FILMLOG_ADMIN_EMAIL: ${FILMLOG_ADMIN_EMAIL:-robert@einsle.com}
+  FILMLOG_ADMIN_EMAIL: ${FILMLOG_ADMIN_EMAIL}
   # AWS SES per SMTP (Port 587, STARTTLS). Zugangsdaten = SES-SMTP-Credentials, nicht der AWS-Access-Key.
   MAIL_MAILER: smtp
   MAIL_HOST: ${MAIL_HOST:-email-smtp.eu-central-1.amazonaws.com}

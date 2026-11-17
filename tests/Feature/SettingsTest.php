@@ -21,15 +21,15 @@ test('the settings page is linked from the header', function () {
 
 test('companions are listed in their order with FSK limit and usage', function () {
     $family = Companion::factory()->create(['name' => 'Familie', 'max_fsk' => 12, 'sort' => 2]);
-    Companion::factory()->create(['name' => 'Jasmin', 'max_fsk' => null, 'sort' => 1]);
+    Companion::factory()->create(['name' => 'Sam', 'max_fsk' => null, 'sort' => 1]);
     Viewing::factory()->for(Movie::factory()->create())->create()->companions()->attach($family);
 
     $this->get(route('settings'))
-        ->assertSeeInOrder(['Jasmin', 'ohne FSK-Grenze', '0 Sichtungen', 'Familie', 'bis FSK 12', '1 Sichtung']);
+        ->assertSeeInOrder(['Sam', 'ohne FSK-Grenze', '0 Sichtungen', 'Familie', 'bis FSK 12', '1 Sichtung']);
 });
 
 test('a companion can be added at the end', function () {
-    Companion::factory()->create(['name' => 'Jasmin', 'sort' => 4]);
+    Companion::factory()->create(['name' => 'Sam', 'sort' => 4]);
 
     Livewire::test(Settings::class)
         ->set('name', ' Familie ')
@@ -45,7 +45,7 @@ test('a companion can be added at the end', function () {
 });
 
 test('adding validates name and FSK', function (array $input, string $errorField) {
-    Companion::factory()->create(['name' => 'Jasmin']);
+    Companion::factory()->create(['name' => 'Sam']);
 
     Livewire::test(Settings::class)
         ->set($input)
@@ -55,7 +55,7 @@ test('adding validates name and FSK', function (array $input, string $errorField
     expect(Companion::count())->toBe(1);
 })->with([
     'empty name' => [['name' => ''], 'name'],
-    'duplicate name' => [['name' => 'Jasmin'], 'name'],
+    'duplicate name' => [['name' => 'Sam'], 'name'],
     'name too long' => [['name' => str_repeat('x', 51)], 'name'],
     'unknown FSK' => [['name' => 'Familie', 'maxFsk' => '14'], 'maxFsk'],
 ]);
@@ -79,12 +79,12 @@ test('a companion can be renamed and its FSK limit changed', function () {
 });
 
 test('renaming rejects a name that is already taken', function () {
-    Companion::factory()->create(['name' => 'Jasmin']);
+    Companion::factory()->create(['name' => 'Sam']);
     $companion = Companion::factory()->create(['name' => 'Tom']);
 
     Livewire::test(Settings::class)
         ->call('startEditing', $companion->id)
-        ->set('editName', 'Jasmin')
+        ->set('editName', 'Sam')
         ->call('saveCompanion')
         ->assertHasErrors('editName');
 
@@ -104,15 +104,15 @@ test('deleting a companion keeps its viewings', function () {
 });
 
 test('companions can be reordered by drag and drop', function () {
-    $jasmin = Companion::factory()->create(['name' => 'Jasmin', 'sort' => 1]);
+    $sam = Companion::factory()->create(['name' => 'Sam', 'sort' => 1]);
     $family = Companion::factory()->create(['name' => 'Familie', 'sort' => 2]);
     $tom = Companion::factory()->create(['name' => 'Tom', 'sort' => 3]);
 
     Livewire::test(Settings::class)->call('moveCompanion', (string) $tom->id, 0);
 
-    expect(Companion::query()->ordered()->pluck('id')->all())->toBe([$tom->id, $jasmin->id, $family->id]);
+    expect(Companion::query()->ordered()->pluck('id')->all())->toBe([$tom->id, $sam->id, $family->id]);
 
     Livewire::test(Settings::class)->call('moveCompanion', $tom->id, 5);
 
-    expect(Companion::query()->ordered()->pluck('id')->all())->toBe([$jasmin->id, $family->id, $tom->id]);
+    expect(Companion::query()->ordered()->pluck('id')->all())->toBe([$sam->id, $family->id, $tom->id]);
 });

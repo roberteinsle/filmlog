@@ -79,6 +79,9 @@ class LoginLinks
 
     private function isAdminEmail(string $email): bool
     {
-        return Str::lower(trim($email)) === Str::lower((string) config('filmlog.admin_email'));
+        $adminEmail = (string) config('filmlog.admin_email');
+
+        // Ohne konfigurierte Admin-Adresse darf sich niemand anmelden.
+        return $adminEmail !== '' && Str::lower(trim($email)) === Str::lower($adminEmail);
     }
 }

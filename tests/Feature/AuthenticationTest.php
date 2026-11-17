@@ -68,6 +68,18 @@ test('no mail is sent for other addresses, but the response looks the same', fun
     Mail::assertNothingSent();
 });
 
+test('without a configured admin address nobody gets a login link', function (?string $adminEmail) {
+    Mail::fake();
+    config(['filmlog.admin_email' => $adminEmail]);
+
+    Livewire::test(Login::class)
+        ->set('email', 'admin@example.com')
+        ->call('sendLink')
+        ->assertSet('linkSent', true);
+
+    Mail::assertNothingSent();
+})->with(['missing' => [null], 'empty' => ['']]);
+
 test('login link requests are throttled', function () {
     Mail::fake();
 

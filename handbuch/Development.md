@@ -51,6 +51,7 @@ The project website <https://filmlog.einsle.app> is the overview of all features
 | `assets/` | Styles, script, favicon, social preview image (`og.png`) and the self hosted Instrument Sans font with its licence |
 | `robots.txt`, `sitemap.xml` | Crawling rules and sitemap |
 | `llms.txt` | Plain summary with links for AI assistants |
+| `<key>.txt` | IndexNow key file (the key is public by design) |
 | `.well-known/security.txt` | How to report vulnerabilities (RFC 9116); renew `Expires` once a year |
 | `CNAME` | Custom domain `filmlog.einsle.app` |
 | `assets/logo.svg`, `assets/social-preview.png` | Logo and the 1280×640 social preview, also used in the README and as the repository's social preview |
@@ -61,6 +62,17 @@ Rules for changes:
 - Colours and typeface follow the app (stone, amber, the three status colours, Instrument Sans).
 - No cookies, no analytics, nothing loaded from third parties.
 
+### IndexNow
+
+After every successful deploy the workflow reports the public addresses to [IndexNow](https://www.indexnow.org/) (`api.indexnow.org`), which forwards them to Bing, Yandex, Seznam, Naver and Yep. Google does not take part; it reads the sitemap.
+
+- The key is set as `INDEXNOW_KEY` in `.github/workflows/pages.yml` and published as `site/<key>.txt`. Both must match; the key is not a secret.
+- The addresses come from `INDEXNOW_PATHS` in the same workflow. Add new public pages there.
+- The step waits until the key file is live, accepts HTTP 200 and 202, and never fails the deploy. Its log shows the answer.
+- Bing Webmaster Tools list received submissions under *IndexNow*.
+
+To change the key, create a new random key (8 to 128 characters: letters, digits, hyphens), replace the key file and the variable in one commit.
+
 ### SEO and GEO checklist
 
 When a feature is added or changed:
@@ -69,5 +81,5 @@ When a feature is added or changed:
 2. Keep `<title>` (about 60 characters) and the meta description (about 155 characters) accurate.
 3. Update the JSON-LD graph: `featureList` of the `SoftwareApplication`, and the `FAQPage` questions word for word as on the page.
 4. Update `llms.txt` (key facts and links), so AI assistants describe Filmlog correctly.
-5. Set `lastmod` in `sitemap.xml` to the date of the change.
+5. Set `lastmod` in `sitemap.xml` to the date of the change, and add new public pages to `sitemap.xml` and `INDEXNOW_PATHS`.
 6. Check the page at 390 px width: no horizontal scrolling.

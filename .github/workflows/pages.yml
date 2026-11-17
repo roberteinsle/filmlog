@@ -9,6 +9,13 @@ on:
     paths: ['site/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 
+env:
+  SITE_URL: https://filmlog.einsle.app
+  # IndexNow-Schlüssel: öffentlich, liegt als site/<Schlüssel>.txt auf der Website.
+  INDEXNOW_KEY: f5f82a3a54c05be77e4a0845b7468abd
+  # Öffentliche Adressen, die nach jedem Deploy an IndexNow gemeldet werden.
+  INDEXNOW_PATHS: / /llms.txt /sitemap.xml
+
 permissions:
   contents: read
   pages: write
@@ -35,3 +42,26 @@ jobs:
 
       - id: deployment
         uses: actions/deploy-pages@v4
+
+      # Meldet die Website an IndexNow (Bing, Yandex, Seznam, Naver, Yep); Google nutzt die Sitemap.
+      - name: Notify IndexNow
+        continue-on-error: true
+        run: |
+          test -f "site/${INDEXNOW_KEY}.txt" || { echo "::warning::site/${INDEXNOW_KEY}.txt fehlt"; exit 1; }
+
+          # Die Suchmaschinen prüfen die Schlüsseldatei; erst melden, wenn sie live ist.
+          for attempt in $(seq 1 12); do
+            [ "$(curl -fsS "${SITE_URL}/${INDEXNOW_KEY}.txt" 2>/dev/null)" = "${INDEXNOW_KEY}" ] && break
+            sleep 10
+          done
+
+          urls=$(for path in ${INDEXNOW_PATHS}; do printf '"%s%s",' "${SITE_URL}" "${path}"; done)
+          body=$(printf '{"host":"%s","key":"%s","keyLocation":"%s/%s.txt","urlList":[%s]}' \
+            "${SITE_URL#https://}" "${INDEXNOW_KEY}" "${SITE_URL}" "${INDEXNOW_KEY}" "${urls%,}")
+
+          status=$(curl -sS -o response.txt -w '%{http_code}' -X POST https://api.indexnow.org/indexnow \
+            -H 'Content-Type: application/json; charset=utf-8' -d "${body}")
+          echo "IndexNow: HTTP ${status}"; cat response.txt; echo
+
+          # 200 = angenommen, 202 = angenommen, Schlüssel wird noch geprüft
+          case "${status}" in 200|202) ;; *) echo "::warning::IndexNow antwortet mit HTTP ${status}"; exit 1 ;; esac

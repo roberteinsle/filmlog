@@ -26,7 +26,7 @@ Soweit betroffen, bei jeder Änderung:
 - `README.md`: nur bei neuem Modul oder geändertem Schnellstart; kurz halten.
 - `CLAUDE.md`: bei Änderungen an Architektur, Regeln oder Abläufen.
 - Wiki: mit `python3 scripts/build-wiki.py --push` aus `handbuch/` neu erzeugen und in `filmlog.wiki.git` pushen, nie von Hand bearbeiten.
-- Website https://filmlog.einsle.app (`site/`, GitHub Pages): alle Details als Übersicht, immer Englisch, SEO und GEO beachten. Bei neuen oder geänderten Funktionen mitziehen: Abschnitte in `site/index.html`, die strukturierten Daten (JSON-LD, FAQ wortgleich zum sichtbaren Text), `site/llms.txt` und `lastmod` in `site/sitemap.xml`.
+- Website https://filmlog.einsle.app (`site/`, GitHub Pages): alle Details als Übersicht, immer Englisch, SEO und GEO beachten. Bei neuen oder geänderten Funktionen mitziehen: Abschnitte in `site/index.html`, die strukturierten Daten (JSON-LD, FAQ wortgleich zum sichtbaren Text), `site/llms.txt`, `lastmod` in `site/sitemap.xml` und neue öffentliche Seiten in `INDEXNOW_PATHS` (`.github/workflows/pages.yml`). Nach jedem Deploy meldet der Workflow die Seiten an IndexNow.
 
 ## Ablauf
 

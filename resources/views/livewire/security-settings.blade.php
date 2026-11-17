@@ -14,7 +14,7 @@
                     if (! (error instanceof window.PasskeyErrors.UserCancelledError)) {
                         this.passkeyError = error instanceof window.PasskeyErrors.PasskeyExistsError
                             ? 'Für dieses Gerät gibt es schon einen Passkey.'
-                            : 'Der Passkey konnte nicht gespeichert werden.';
+                            : 'Der Passkey konnte nicht gespeichert werden.' + window.PasskeyErrors.describe(error);
                     }
                 }
                 this.busy = false;
@@ -27,7 +27,7 @@
                     $wire.$refresh();
                 } catch (error) {
                     if (! (error instanceof window.PasskeyErrors.UserCancelledError)) {
-                        this.passkeyError = 'Die Bestätigung mit Passkey hat nicht geklappt.';
+                        this.passkeyError = 'Die Bestätigung mit Passkey hat nicht geklappt.' + window.PasskeyErrors.describe(error);
                     }
                 }
                 this.busy = false;

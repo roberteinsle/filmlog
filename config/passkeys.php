@@ -1,5 +1,16 @@
 <?php
 
+/*
+| APP_URL robust auslesen: ohne Schema (z. B. „filmlog.einsle.cloud“) ergäbe parse_url() keinen Host,
+| die Relying-Party-ID wäre null und jeder Passkey-Endpunkt bräche ab. Ein abschließender Schrägstrich
+| würde die Origin-Prüfung scheitern lassen. Beides lässt sich zusätzlich per Env überschreiben.
+*/
+$appUrl = trim((string) config('app.url'));
+$appUrl = preg_match('~^https?://~i', $appUrl) ? $appUrl : 'https://'.$appUrl;
+$appHost = (string) parse_url($appUrl, PHP_URL_HOST);
+$appPort = parse_url($appUrl, PHP_URL_PORT);
+$appOrigin = strtolower((string) parse_url($appUrl, PHP_URL_SCHEME)).'://'.$appHost.($appPort ? ':'.$appPort : '');
+
 return [
 
     /*
@@ -13,7 +24,7 @@ return [
     |
     */
 
-    'relying_party_id' => parse_url(config('app.url'), PHP_URL_HOST),
+    'relying_party_id' => env('PASSKEYS_RELYING_PARTY_ID', $appHost),
 
     /*
     |--------------------------------------------------------------------------
@@ -26,9 +37,7 @@ return [
     |
     */
 
-    'allowed_origins' => [
-        config('app.url'),
-    ],
+    'allowed_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env('PASSKEYS_ALLOWED_ORIGINS', $appOrigin))))),
 
     /*
     |--------------------------------------------------------------------------

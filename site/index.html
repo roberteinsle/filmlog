@@ -4,7 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Filmlog · Your film diary on your own server</title>
-    <meta name="description" content="Filmlog is a self hosted film diary for one person: viewings with ratings, watchlist, three suggestions for tonight, Plex scrobbling and Trakt import. Built with Laravel and Livewire.">
+    <meta name="description" content="Filmlog is a self hosted film diary and watchlist for one person. Track viewings and ratings, get three picks for tonight, sync Plex and import Trakt. Laravel, Docker.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="alternate" hreflang="en" href="https://filmlog.einsle.app/">
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
     <link rel="canonical" href="https://filmlog.einsle.app/">
     <meta name="theme-color" content="#0c0a09">
     <meta property="og:type" content="website">
@@ -20,16 +23,120 @@
     <link rel="preload" href="assets/fonts/instrument-sans-600.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="assets/style.css">
     <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-            {"@type": "Question", "name": "Is Filmlog made for several people?", "acceptedAnswer": {"@type": "Answer", "text": "No. Filmlog has exactly one account, set by FILMLOG_ADMIN_EMAIL. Companions such as family members are tracked per viewing, not as separate users."}},
-            {"@type": "Question", "name": "Do I need Plex or Trakt?", "acceptedAnswer": {"@type": "Answer", "text": "No. Both are optional. Without them you log viewings by hand from the film page or with Läuft gerade on the start page."}},
-            {"@type": "Question", "name": "Where does the film data come from?", "acceptedAnswer": {"@type": "Answer", "text": "From TMDB. You need a free TMDB account and an API Read Access Token. Streaming offers for Germany come from JustWatch through TMDB."}},
-            {"@type": "Question", "name": "What language is the app in?", "acceptedAnswer": {"@type": "Answer", "text": "The interface is German, film data is fetched in German for the region Germany. Both can be changed in the configuration."}}
-        ]
-    }
+{
+    "@context": "https://schema.org",
+    "@graph": [
+        {
+            "@type": "WebSite",
+            "@id": "https://filmlog.einsle.app/#website",
+            "url": "https://filmlog.einsle.app/",
+            "name": "Filmlog",
+            "inLanguage": "en"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "@id": "https://filmlog.einsle.app/#app",
+            "name": "Filmlog",
+            "description": "Self hosted film diary and watchlist for one person: viewings with ratings and companions, a status for every film, three suggestions for tonight, Plex scrobbling, Trakt import, streaming subscriptions, yearly review and German box office charts.",
+            "applicationCategory": "EntertainmentApplication",
+            "applicationSubCategory": "Film diary",
+            "operatingSystem": "Linux (Docker)",
+            "softwareRequirements": "Docker, PostgreSQL 17, SMTP, TMDB API token",
+            "inLanguage": "de",
+            "url": "https://filmlog.einsle.app/",
+            "image": "https://filmlog.einsle.app/assets/og.png",
+            "featureList": [
+                "Seen, watchlist and never seen status for every film",
+                "Viewings with date, rating from 1 to 10, companions and note",
+                "Watchlist and own lists with drag and drop ranking and filters",
+                "Three suggestions for tonight by companions, time, mood and streaming subscription",
+                "Plex webhook scrobbling and nightly library sync",
+                "Trakt import of history, ratings, watchlist and lists",
+                "Film pages with trailer, collection and streaming offers in Germany",
+                "Yearly and monthly review",
+                "German box office charts since 1970",
+                "Passkey login with login links and authenticator codes"
+            ],
+            "isAccessibleForFree": true
+        },
+        {
+            "@type": "SoftwareSourceCode",
+            "@id": "https://filmlog.einsle.app/#code",
+            "name": "Filmlog",
+            "codeRepository": "https://github.com/roberteinsle/filmlog",
+            "programmingLanguage": [
+                "PHP",
+                "JavaScript"
+            ],
+            "runtimePlatform": "PHP 8.5, Laravel 13, Livewire 4, PostgreSQL 17",
+            "targetProduct": {
+                "@id": "https://filmlog.einsle.app/#app"
+            }
+        },
+        {
+            "@type": "FAQPage",
+            "@id": "https://filmlog.einsle.app/#faq",
+            "mainEntity": [
+                {
+                    "@type": "Question",
+                    "name": "Is Filmlog made for several people?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "No. Filmlog has exactly one account, set by FILMLOG_ADMIN_EMAIL. Companions such as family members are recorded per viewing, and they can carry an age limit for the suggestions."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Do I need Plex or Trakt?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "No. Both are optional. Without them you log viewings from the film page or with Läuft gerade on the start page. The Plex webhook needs Plex Pass."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Where does the film data come from?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "From TMDB. You need a free TMDB account and an API Read Access Token. Streaming offers for Germany come from JustWatch through TMDB, the cinema charts from InsideKino."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "What language is the app in?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "The interface is German. Film data is fetched in German for the region Germany; language and region can be changed in the configuration."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "What do I need to run it?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "A server with Docker, PostgreSQL 17 and an SMTP account for login links. The image is built for PHP 8.5 with Laravel 13 and needs no Redis."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Can I use it on my phone?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Yes, Filmlog is designed for the phone first, with a bottom navigation and dialogs that open as sheets. It works just as well on a desktop browser."
+                    }
+                },
+                {
+                    "@type": "Question",
+                    "name": "Can I import from other services?",
+                    "acceptedAnswer": {
+                        "@type": "Answer",
+                        "text": "Today Filmlog imports Trakt exports and receives Plex scrobbles. Other sources are not supported yet."
+                    }
+                }
+            ]
+        }
+    ]
+}
     </script>
 </head>
 <body>
@@ -40,6 +147,7 @@
         <ul class="nav-links title-4">
             <li><a href="#features">Features</a></li>
             <li><a href="#how">How it works</a></li>
+            <li><a href="#handbook">Handbook</a></li>
             <li><a href="#faq">FAQ</a></li>
             <li><a href="https://github.com/roberteinsle/filmlog">GitHub</a></li>
         </ul>
@@ -182,6 +290,43 @@
             </div>
         </section>
 
+        <section id="integrations" aria-labelledby="integrations-title">
+            <div class="container">
+                <div class="section-head reveal">
+                    <span class="kicker caption-3">Integrations</span>
+                    <h2 class="heading-3" id="integrations-title">Works with the services you already use</h2>
+                    <p class="body-3">Every integration is optional. Filmlog only needs TMDB for film data.</p>
+                </div>
+                <div class="integrations">
+                    <article class="integration reveal">
+                        <h3 class="title-2">TMDB</h3>
+                        <p class="body-6">Search, posters, cast, German age ratings, trailers and collections. Refreshed every night for films on your lists.</p>
+                        <a class="text-link caption-4" href="https://github.com/roberteinsle/filmlog/wiki/TMDB-and-Streaming">TMDB and streaming</a>
+                    </article>
+                    <article class="integration reveal">
+                        <h3 class="title-2">Plex</h3>
+                        <p class="body-6">A webhook logs every film you finish (about 90&nbsp;% watched). A nightly sync marks what is on your server.</p>
+                        <a class="text-link caption-4" href="https://github.com/roberteinsle/filmlog/wiki/Plex">Plex setup</a>
+                    </article>
+                    <article class="integration reveal">
+                        <h3 class="title-2">Trakt</h3>
+                        <p class="body-6">Import your export once: history, ratings, watchlist and lists. Repeat it any time without duplicates.</p>
+                        <a class="text-link caption-4" href="https://github.com/roberteinsle/filmlog/wiki/Trakt-Import">Trakt import</a>
+                    </article>
+                    <article class="integration reveal">
+                        <h3 class="title-2">Streaming in Germany</h3>
+                        <p class="body-6">Flat rate, free and ad supported offers via JustWatch and TMDB, with your own subscriptions highlighted.</p>
+                        <a class="text-link caption-4" href="https://github.com/roberteinsle/filmlog/wiki/TMDB-and-Streaming">Streaming subscriptions</a>
+                    </article>
+                    <article class="integration reveal">
+                        <h3 class="title-2">InsideKino</h3>
+                        <p class="body-6">The yearly German box office charts since 1970, matched to TMDB and shown with your status.</p>
+                        <a class="text-link caption-4" href="https://github.com/roberteinsle/filmlog/wiki/Cinema-Charts">Cinema charts</a>
+                    </article>
+                </div>
+            </div>
+        </section>
+
         <section id="how" aria-labelledby="how-title">
             <div class="container">
                 <div class="section-head reveal">
@@ -208,6 +353,26 @@
             </div>
         </section>
 
+        <section id="stack" aria-labelledby="stack-title">
+            <div class="container">
+                <div class="section-head reveal">
+                    <span class="kicker caption-3">Under the hood</span>
+                    <h2 class="heading-3" id="stack-title">A small, well tested Laravel app</h2>
+                    <p class="body-3">Everything you need to judge whether Filmlog fits your server.</p>
+                </div>
+                <dl class="specs reveal">
+                    <div><dt class="caption-4 subtle">Language and framework</dt><dd class="title-3">PHP 8.5 · Laravel 13</dd></div>
+                    <div><dt class="caption-4 subtle">Interface</dt><dd class="title-3">Livewire 4 · Tailwind CSS 4 · German</dd></div>
+                    <div><dt class="caption-4 subtle">Database</dt><dd class="title-3">PostgreSQL 17, no Redis</dd></div>
+                    <div><dt class="caption-4 subtle">Runtime</dt><dd class="title-3">One Docker image: app, worker, scheduler</dd></div>
+                    <div><dt class="caption-4 subtle">Deployment</dt><dd class="title-3">GitHub Actions, GHCR, Coolify</dd></div>
+                    <div><dt class="caption-4 subtle">Login</dt><dd class="title-3">Passkey, login link, authenticator code</dd></div>
+                    <div><dt class="caption-4 subtle">Nightly tasks</dt><dd class="title-3">Plex sync, TMDB refresh, collections, cleanup</dd></div>
+                    <div><dt class="caption-4 subtle">Tests</dt><dd class="title-3">Pest feature tests against PostgreSQL</dd></div>
+                </dl>
+            </div>
+        </section>
+
         <section id="privacy" aria-labelledby="privacy-title">
             <div class="container privacy">
                 <div class="section-head reveal">
@@ -220,6 +385,30 @@
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Exactly one account, no registration, no passwords</span></li>
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Secrets only in your environment, never in the code</span></li>
                     <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span>Film data from TMDB, your own history stays in your PostgreSQL</span></li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="handbook" aria-labelledby="handbook-title">
+            <div class="container">
+                <div class="section-head reveal">
+                    <span class="kicker caption-3">Handbook</span>
+                    <h2 class="heading-3" id="handbook-title">Every detail, one click away</h2>
+                    <p class="body-3">The handbook in the GitHub wiki covers setup, every screen and every integration.</p>
+                </div>
+                <ul class="docs reveal">
+                    <li><a class="doc-link" href="https://github.com/roberteinsle/filmlog/wiki/Features"><span class="title-3">Features</span><span class="body-6 muted">Every screen, from the status banner to the yearly review</span></a></li>
+                    <li><a class="doc-link" href="https://github.com/roberteinsle/filmlog/wiki/Installation"><span class="title-3">Installation</span><span class="body-6 muted">Local development with Docker Compose or Codespaces</span></a></li>
+                    <li><a class="doc-link" href="https://github.com/roberteinsle/filmlog/wiki/Configuration"><span class="title-3">Configuration</span><span class="body-6 muted">Every environment variable and setting</span></a></li>
+                    <li><a class="doc-link" href="https://github.com/roberteinsle/filmlog/wiki/Deployment"><span class="title-3">Deployment</span><span class="body-6 muted">Docker image, GitHub Actions and Coolify</span></a></li>
+                    <li><a class="doc-link" href="https://github.com/roberteinsle/filmlog/wiki/Plex"><span class="title-3">Plex</span><span class="body-6 muted">Webhook, accounts and library sync</span></a></li>
+                    <li><a class="doc-link" href="https://github.com/roberteinsle/filmlog/wiki/Trakt-Import"><span class="title-3">Trakt import</span><span class="body-6 muted">What is imported and how matching works</span></a></li>
+                    <li><a class="doc-link" href="https://github.com/roberteinsle/filmlog/wiki/TMDB-and-Streaming"><span class="title-3">TMDB and streaming</span><span class="body-6 muted">Film data, trailers, collections and subscriptions</span></a></li>
+                    <li><a class="doc-link" href="https://github.com/roberteinsle/filmlog/wiki/Cinema-Charts"><span class="title-3">Cinema charts</span><span class="body-6 muted">German box office charts since 1970</span></a></li>
+                    <li><a class="doc-link" href="https://github.com/roberteinsle/filmlog/wiki/Security"><span class="title-3">Security</span><span class="body-6 muted">Passkeys, login links and authenticator codes</span></a></li>
+                    <li><a class="doc-link" href="https://github.com/roberteinsle/filmlog/wiki/Troubleshooting"><span class="title-3">Troubleshooting</span><span class="body-6 muted">Known pitfalls and their fixes</span></a></li>
+                    <li><a class="doc-link" href="https://github.com/roberteinsle/filmlog/wiki/Architecture"><span class="title-3">Architecture</span><span class="body-6 muted">Stack, data model, jobs and schedule</span></a></li>
+                    <li><a class="doc-link" href="https://github.com/roberteinsle/filmlog/wiki/Development"><span class="title-3">Development</span><span class="body-6 muted">Conventions, tests and documentation</span></a></li>
                 </ul>
             </div>
         </section>

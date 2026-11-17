@@ -26,7 +26,7 @@ Soweit betroffen, bei jeder Änderung:
 - `README.md`: nur bei neuem Modul oder geändertem Schnellstart; kurz halten.
 - `CLAUDE.md`: bei Änderungen an Architektur, Regeln oder Abläufen.
 - Wiki: mit `python3 scripts/build-wiki.py --push` aus `handbuch/` neu erzeugen und in `filmlog.wiki.git` pushen, nie von Hand bearbeiten.
-- Website (`site/`, GitHub Pages unter filmlog.einsle.app): bei neuen sichtbaren Funktionen.
+- Website https://filmlog.einsle.app (`site/`, GitHub Pages): alle Details als Übersicht, immer Englisch, SEO und GEO beachten. Bei neuen oder geänderten Funktionen mitziehen: Abschnitte in `site/index.html`, die strukturierten Daten (JSON-LD, FAQ wortgleich zum sichtbaren Text), `site/llms.txt` und `lastmod` in `site/sitemap.xml`.
 
 ## Ablauf
 

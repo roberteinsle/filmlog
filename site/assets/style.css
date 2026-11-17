@@ -255,3 +255,24 @@ footer { border-top: 1px solid var(--border); padding: var(--space-500) 0 var(--
     section, .tagline { padding: var(--space-700) 0; }
     .floating-banner { position: relative; right: auto; bottom: auto; width: 100%; margin-top: var(--space-200); }
 }
+
+/* Integrations, specs and handbook overview */
+.integrations { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-200); }
+.integration { display: flex; flex-direction: column; gap: var(--space-75); padding: var(--space-300); border: 1px solid var(--border); border-radius: 16px; }
+.integration p { color: var(--text-muted); flex: 1; }
+.integration .text-link { align-self: flex-start; margin-top: var(--space-75); }
+.specs { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-200); margin: 0; }
+.specs div { padding: var(--space-200) var(--space-300); border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+.specs dd { margin: var(--space-50) 0 0; }
+.docs { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-100); list-style: none; padding: 0; margin: 0; }
+.doc-link { display: flex; flex-direction: column; gap: var(--space-50); height: 100%; padding: var(--space-200) var(--space-300); border: 1px solid var(--border); border-radius: 16px; text-decoration: none; transition: border-color 300ms var(--ease), transform 500ms var(--ease); }
+.doc-link:hover { border-color: var(--amber); transform: translateY(-2px); }
+
+@media (max-width: 960px) {
+    .integrations, .docs { grid-template-columns: repeat(2, 1fr); }
+    .specs { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+    .integrations, .docs, .specs { grid-template-columns: 1fr; }
+}

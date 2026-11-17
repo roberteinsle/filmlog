@@ -1,0 +1,37 @@
+# Filmlog
+
+> Filmlog is a self hosted film diary and watchlist for one person. It records every viewing with date, rating (1 to 10), companions and a note, shows a status for every film (seen, on the watchlist, never seen) and suggests three unseen films for tonight. It integrates TMDB, Plex and Trakt and runs as a Laravel 13 app in Docker with PostgreSQL. The interface is German.
+
+## Key facts
+
+- Purpose: answer "have I seen this already?" and "what do we watch tonight?"
+- Users: exactly one account per installation (set by FILMLOG_ADMIN_EMAIL); companions are tracked per viewing
+- Film data: TMDB (free API token required), German language and region by default
+- Plex: webhook turns finished films (about 90 % watched) into diary entries; nightly library sync marks films on the server; selectable Plex Home profiles
+- Trakt: one time ZIP import of history, ratings, watchlist and lists; repeatable without duplicates
+- Tonight: suggestions from the watchlist or the Plex library, filtered by companions' age limit, time, mood and streaming subscription
+- Review: hours watched, top genres, favourite directors, disagreements with TMDB, unfinished film series
+- Cinema charts: German yearly box office charts since 1970 (source InsideKino)
+- Login: passkey, one time login link, optional authenticator codes; no passwords
+- Stack: PHP 8.5, Laravel 13, Livewire 4, Tailwind CSS 4, PostgreSQL 17, one Docker image for app, queue worker and scheduler; GitHub Actions, GHCR, Coolify
+- Privacy: self hosted, no analytics, no external account; history stays in the user's own database
+
+## Docs
+
+- [Website](https://filmlog.einsle.app/): overview of all features
+- [Source code](https://github.com/roberteinsle/filmlog): README with quick start
+- [Features](https://github.com/roberteinsle/filmlog/wiki/Features): every screen explained
+- [Installation](https://github.com/roberteinsle/filmlog/wiki/Installation): local development
+- [Configuration](https://github.com/roberteinsle/filmlog/wiki/Configuration): environment variables
+- [Deployment](https://github.com/roberteinsle/filmlog/wiki/Deployment): Docker image, CI and Coolify
+- [Plex](https://github.com/roberteinsle/filmlog/wiki/Plex): webhook and library sync
+- [Trakt import](https://github.com/roberteinsle/filmlog/wiki/Trakt-Import): import rules and report
+- [TMDB and streaming](https://github.com/roberteinsle/filmlog/wiki/TMDB-and-Streaming): film data and subscriptions
+- [Cinema charts](https://github.com/roberteinsle/filmlog/wiki/Cinema-Charts): German box office charts
+- [Security](https://github.com/roberteinsle/filmlog/wiki/Security): login methods
+- [Architecture](https://github.com/roberteinsle/filmlog/wiki/Architecture): data model, jobs and schedule
+
+## Optional
+
+- [Troubleshooting](https://github.com/roberteinsle/filmlog/wiki/Troubleshooting)
+- [Development](https://github.com/roberteinsle/filmlog/wiki/Development)

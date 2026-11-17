@@ -1,3 +1,37 @@
+# Filmlog – Projektregeln
+
+Diese Regeln gelten zusätzlich zu den Laravel-Boost-Guidelines weiter unten (die werden von `php artisan boost:install` erzeugt; dort nichts von Hand ändern).
+
+## Keine persönlichen Daten
+
+Keine persönlichen Daten des Maintainers ins Repository: weder in Code, Doku, `handbuch/`, Wiki, Commits noch Issues. Dazu zählen Namen, E-Mail-Adressen, Konten- und Benutzernamen, Familiennamen und private Hosts. Beispiele verwenden neutrale Werte (`admin@example.com`, `filmlog.example.com`, „Sam“). Echte Werte kommen ausschließlich aus Umgebungsvariablen (Coolify bzw. `.env`, nie committet).
+
+## Neue Funktionen und Module
+
+Bei jeder neuen Funktion oder jedem neuen Modul prüfen, wie es mit den bestehenden Modulen zusammenspielt, und es ausschließlich über die vorhandenen Registries anbinden, nie über direkte Zugriffe zwischen Modulen. In Filmlog sind das:
+
+- der Service-Container (`AppServiceProvider`: `TmdbClient`, `PlexClient`) für externe Dienste,
+- Actions in `app/Actions/` für fachliche Abläufe (z. B. `LogViewing`, `EnsureMovie`, `SyncMovie`),
+- Livewire-Events (z. B. `list-membership-changed`) zwischen Komponenten,
+- der Scheduler (`routes/console.php`) und die Queue (`app/Jobs/`) für Hintergrundarbeit,
+- die Konfiguration (`config/filmlog.php`, `config/services.php`) statt verstreuter Konstanten.
+
+Livewire-Komponenten greifen nicht gegenseitig auf ihre Interna zu; gemeinsame Logik wandert in eine Action oder einen Service.
+
+## Dokumentation nachziehen
+
+Soweit betroffen, bei jeder Änderung:
+
+- `handbuch/<Seite>.md`: alle Details. Quelle des Wikis.
+- `README.md`: nur bei neuem Modul oder geändertem Schnellstart; kurz halten.
+- `CLAUDE.md`: bei Änderungen an Architektur, Regeln oder Abläufen.
+- Wiki: mit `python3 scripts/build-wiki.py --push` aus `handbuch/` neu erzeugen und in `filmlog.wiki.git` pushen, nie von Hand bearbeiten.
+- Website (`site/`, GitHub Pages unter filmlog.einsle.app): bei neuen sichtbaren Funktionen.
+
+## Ablauf
+
+Committen und auf `main` pushen (löst Tests, Build und Deploy aus). Releases nur auf ausdrücklichen Wunsch.
+
 <laravel-boost-guidelines>
 === foundation rules ===
 

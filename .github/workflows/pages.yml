@@ -26,11 +26,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  # Eigener Job: Direkt nach dem Upload ist das Artefakt für deploy-pages nicht immer schon sichtbar.
+  upload:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -40,6 +38,13 @@ jobs:
         with:
           path: site
 
+  deploy:
+    needs: upload
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
 
@@ -47,8 +52,6 @@ jobs:
       - name: Notify IndexNow
         continue-on-error: true
         run: |
-          test -f "site/${INDEXNOW_KEY}.txt" || { echo "::warning::site/${INDEXNOW_KEY}.txt fehlt"; exit 1; }
-
           # Die Suchmaschinen prüfen die Schlüsseldatei; erst melden, wenn sie live ist.
           for attempt in $(seq 1 12); do
             [ "$(curl -fsS "${SITE_URL}/${INDEXNOW_KEY}.txt" 2>/dev/null)" = "${INDEXNOW_KEY}" ] && break

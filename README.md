@@ -8,6 +8,7 @@
 [![Wiki](https://img.shields.io/badge/Docs-Wiki-44403c)](https://github.com/roberteinsle/filmlog/wiki)
 [![Release](https://img.shields.io/github/v/release/roberteinsle/filmlog?label=Version)](https://github.com/roberteinsle/filmlog/releases)
 [![Tests](https://img.shields.io/github/actions/workflow/status/roberteinsle/filmlog/build.yml?branch=main&label=Tests)](https://github.com/roberteinsle/filmlog/actions/workflows/build.yml)
+[![License](https://img.shields.io/badge/License-AGPL--3.0-blue)](LICENSE)
 
 <img src="site/assets/social-preview.png" width="720" alt="Filmlog: your film diary on your own server. Seen, watchlist, never seen."/>
 
@@ -88,4 +89,6 @@ The login link for local use is written to `storage/logs/laravel.log`. Architect
 
 ## License
 
-No open source license has been chosen yet, so all rights are reserved for now: you may read the code, but not reuse or redistribute it. Film data and images are provided by [TMDB](https://www.themoviedb.org/); this product uses the TMDB API but is not endorsed or certified by TMDB.
+Filmlog is free software under the [GNU Affero General Public License v3.0](LICENSE). You may use, adapt and share it at no cost. If you offer a modified version to others over a network, you must publish its source code under the AGPL-3.0 as well.
+
+Film data and images are provided by [TMDB](https://www.themoviedb.org/); this product uses the TMDB API but is not endorsed or certified by TMDB.

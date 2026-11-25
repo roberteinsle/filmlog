@@ -46,7 +46,7 @@ The project website <https://filmlog.einsle.app> is the overview of all features
 
 | File | Purpose |
 |---|---|
-| `index.html` | The page: hero, status, features, integrations, how it works, stack, privacy, handbook overview, FAQ |
+| `index.html` | The page: hero, status, features, integrations, install, open source and stack, privacy, handbook overview, FAQ |
 | `404.html` | Branded not found page |
 | `assets/` | Styles, script, favicon, social preview image (`og.png`) and the self hosted Instrument Sans font with its licence |
 | `robots.txt`, `sitemap.xml` | Crawling rules and sitemap |

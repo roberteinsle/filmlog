@@ -1,10 +1,11 @@
 # Filmlog
 
-> Filmlog is a self hosted film diary and watchlist for one person. It records every viewing with date, rating (1 to 10), companions and a note, shows a status for every film (seen, on the watchlist, never seen) and suggests three unseen films for tonight. It integrates TMDB, Plex and Trakt and runs as a Laravel 13 app in Docker with PostgreSQL. The interface is German.
+> Filmlog is an open source (AGPL-3.0), self hosted film diary and watchlist for one person. It records every viewing with date, rating (1 to 10), companions and a note, shows a status for every film (seen, on the watchlist, never seen) and suggests three unseen films for tonight. It integrates TMDB, Plex and Trakt and runs as a Laravel 13 app in Docker with PostgreSQL. The interface is German.
 
 ## Key facts
 
 - Current version: 0.1.0 (see https://github.com/roberteinsle/filmlog/releases)
+- License: GNU AGPL-3.0, free of charge, no telemetry
 - Purpose: answer "have I seen this already?" and "what do we watch tonight?"
 - Users: exactly one account per installation (set by FILMLOG_ADMIN_EMAIL); companions are tracked per viewing
 - Film data: TMDB (free API token required), German language and region by default

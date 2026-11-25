@@ -22,5 +22,7 @@ The app itself is in German. This handbook explains every screen, every integrat
 
 ## Contributing
 
+Filmlog is free software under the [GNU AGPL-3.0](https://github.com/roberteinsle/filmlog/blob/main/LICENSE).
+
 - [Architecture](Architecture.md): stack, data model, jobs and schedule
 - [Development](Development.md): conventions, tests and how this handbook becomes the wiki

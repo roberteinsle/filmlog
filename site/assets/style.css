@@ -122,9 +122,6 @@ p { text-wrap: pretty; }
 }
 .hero .lead { max-width: 680px; margin-top: var(--space-300); color: var(--text-muted); font-size: 1.125rem; line-height: 1.75rem; }
 .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-300); margin-top: var(--space-500); }
-.proof { display: flex; flex-wrap: wrap; gap: var(--space-75) var(--space-200); margin-top: var(--space-500); padding: 0; list-style: none; color: var(--text-subtle); }
-.proof li { display: inline-flex; align-items: center; gap: var(--space-75); }
-.proof svg { width: 16px; height: 16px; color: var(--amber); }
 
 /* Phone mockup of the app */
 .phone {
@@ -187,11 +184,11 @@ section { padding: var(--space-900) 0; }
 .feature p { color: var(--text-muted); }
 
 /* Steps */
-.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-200); counter-reset: step; padding: 0; margin: 0; list-style: none; }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-200); counter-reset: step; padding: 0; margin: 0; list-style: none; }
 .step { padding: var(--space-300); border: 1px solid var(--border); border-radius: 16px; }
 .step-number { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9999px; border: 1px solid var(--amber); color: var(--amber); margin-bottom: var(--space-200); }
 .step h3 { margin-bottom: var(--space-75); }
-.step p { color: var(--text-muted); }
+.step p { color: var(--text-muted); overflow-wrap: anywhere; }
 .step code, .faq code { font-family: ui-monospace, 'Geist Mono', monospace; font-size: 0.875rem; color: #e7e5e4; background: var(--surface-raised); padding: var(--space-25) var(--space-50); border-radius: 4px; }
 
 /* Privacy block */
@@ -242,7 +239,7 @@ footer { border-top: 1px solid var(--border); padding: var(--space-500) 0 var(--
     .phone { margin: 0 auto; }
     .floating-banner { left: auto; right: 0; bottom: calc(var(--space-600) * -1); width: 260px; }
     .features { grid-template-columns: repeat(2, 1fr); }
-    .states, .steps { grid-template-columns: 1fr; }
+    .states { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
@@ -276,3 +273,9 @@ footer { border-top: 1px solid var(--border); padding: var(--space-500) 0 var(--
 @media (max-width: 640px) {
     .integrations, .docs, .specs { grid-template-columns: 1fr; }
 }
+
+/* Hero figures and section footers */
+.stats { display: flex; flex-wrap: wrap; gap: var(--space-200) var(--space-500); margin: var(--space-500) 0 0; }
+.stats div { display: flex; flex-direction: column; }
+.stats dd { margin: 0; color: var(--amber); }
+.section-foot { margin-top: var(--space-400); }
